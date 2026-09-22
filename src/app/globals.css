@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0f172a;
+  --indigo: #4f46e5;
+  --teal: #0d9488;
+  --surface: #f8fafc;
+  --line: #e2e8f0;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-indigo: var(--indigo);
+  --color-teal: var(--teal);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-myanmar: var(--font-noto-myanmar), var(--font-geist-sans), sans-serif;
+  --radius-control: 4px;
+  --radius-button: 8px;
+  --radius-panel: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+html[lang="my"] body {
+  font-family: var(--font-myanmar);
+}

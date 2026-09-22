@@ -1,0 +1,58 @@
+{
+  "brand": {
+    "name": "Ordaro"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "my": "မြန်မာ"
+  },
+  "login": {
+    "title": "Sign in",
+    "phone": "Phone",
+    "phoneHint": "International format, for example +959…",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "signup": "Create a business"
+  },
+  "signup": {
+    "title": "Create your business",
+    "fullName": "Your name",
+    "businessName": "Business name",
+    "phone": "Phone",
+    "phoneHint": "International format, for example +959…",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "submit": "Start selling",
+    "submitting": "Creating…",
+    "login": "Already have an account"
+  },
+  "picker": {
+    "title": "Choose a business",
+    "enter": "Enter",
+    "entering": "Opening…",
+    "accept": "Accept invite",
+    "accepting": "Accepting…",
+    "empty": "This account has no businesses yet.",
+    "invited": "Invited",
+    "logout": "Sign out"
+  },
+  "home": {
+    "title": "You're signed in",
+    "next": "Product screens come next. Nothing here sells yet.",
+    "businesses": "Switch business",
+    "logout": "Sign out",
+    "signingOut": "Signing out…"
+  },
+  "errors": {
+    "invalid_credentials": "Phone or password is wrong.",
+    "invalid_phone": "Use an international number, for example +959…",
+    "phone_in_use": "That phone already has an account.",
+    "validation_failed": "Check the fields and try again.",
+    "account_disabled": "This account cannot sign in.",
+    "no_active_membership": "You cannot enter that business.",
+    "network": "The server did not answer.",
+    "unknown": "Something went wrong."
+  }
+}
