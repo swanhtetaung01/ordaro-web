@@ -7,7 +7,7 @@ import { Button, Field, PageHeader, Panel, SelectField, Soon } from "@/component
 import type { Schemas } from "@/lib/backend";
 import { readJson } from "@/lib/read-json";
 
-type Category = Schemas["CategoryView"];
+type Category = Schemas["CategoryView"] & { parentId?: string };
 type Product = Schemas["ProductView"];
 
 export function CategoryManager() {

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button, Field, PageHeader, Panel, SelectField } from "@/components/ui";
+import { Link } from "@/i18n/navigation";
 import type { Schemas } from "@/lib/backend";
 import { formatAmount } from "@/lib/money";
-import { readJson } from "@/lib/read-json";
+import { messageFor, readJson } from "@/lib/read-json";
 
 type Doc = Schemas["DocumentSummary"];
 type Product = Schemas["ProductView"];
@@ -32,6 +33,7 @@ export function StockDesk() {
   const [unitCost, setUnitCost] = useState("");
   const [movements, setMovements] = useState<Movement[]>([]);
   const [error, setError] = useState<string>();
+  const [payableId, setPayableId] = useState<string>();
 
   function load() {
     return readJson<Doc[]>("/api/stock/documents").then(setDocs);
@@ -64,7 +66,7 @@ export function StockDesk() {
             event.preventDefault();
             setError(undefined);
             try {
-              await readJson("/api/stock/documents", {
+              const posted = await readJson<Schemas["DocumentView"]>("/api/stock/documents", {
                 method: "POST",
                 body: JSON.stringify({
                   type,
@@ -75,11 +77,11 @@ export function StockDesk() {
                   post: true,
                 }),
               });
+              setPayableId(posted.payableId);
               setQuantity("");
               await load();
             } catch (caught) {
-              const code = caught instanceof Error ? caught.message : "unknown";
-              setError(errors.has(code) ? errors(code) : errors("unknown"));
+              setError(messageFor(caught, errors, (code) => errors.has(code)));
             }
           }}
         >
@@ -120,6 +122,11 @@ export function StockDesk() {
         </form>
       </Panel>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {payableId ? (
+        <p className="text-sm">
+          <Link className="font-semibold text-indigo" href={`/payables?id=${payableId}`}>{t("payable")}</Link>
+        </p>
+      ) : null}
       <Panel title={t("recent")}>
         <ul className="flex flex-col gap-2 text-sm">
           {docs.map((doc) => (
@@ -130,8 +137,13 @@ export function StockDesk() {
               {doc.status === "POSTED" ? (
                 <Button
                   onClick={async () => {
-                    await readJson(`/api/stock/documents/${doc.id}?action=void`, { method: "POST" });
-                    await load();
+                    setError(undefined);
+                    try {
+                      await readJson(`/api/stock/documents/${doc.id}?action=void`, { method: "POST" });
+                      await load();
+                    } catch (caught) {
+                      setError(messageFor(caught, errors, (code) => errors.has(code)));
+                    }
                   }}
                   type="button"
                   variant="danger"

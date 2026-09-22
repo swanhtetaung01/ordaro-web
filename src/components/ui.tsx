@@ -14,7 +14,11 @@ const nav = [
   { href: "/staff", key: "staff", soon: false },
   { href: "/registers", key: "registers", soon: false },
   { href: "/settings", key: "settings", soon: false },
-  { href: "/customers", key: "customers", soon: true },
+  { href: "/customers", key: "customers", soon: false },
+  { href: "/receivables", key: "receivables", soon: false },
+  { href: "/payables", key: "payables", soon: false },
+  { href: "/expenses", key: "expenses", soon: false },
+  { href: "/sales/held", key: "heldSales", soon: false },
 ] as const;
 
 export function Shell({

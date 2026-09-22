@@ -157,7 +157,7 @@ export function api(token?: string) {
 }
 
 export function errorResponse(status: number, problem: Problem) {
-  return Response.json({ code: problem.code ?? "unknown" }, { status });
+  return Response.json({ code: problem.code ?? "unknown", detail: problem.detail }, { status });
 }
 
 /** Forwards one backend call. The browser still never sees the bearer token. */
@@ -195,10 +195,17 @@ export async function proxy(path: string, init?: { method?: string; body?: unkno
   });
   if (!result.response.ok) {
     const body = result.error as Problem | undefined;
-    return errorResponse(result.response.status || 502, { code: body?.code ?? body?.title ?? "unknown" });
+    return errorResponse(result.response.status || 502, {
+      code: body?.code ?? body?.title ?? "unknown",
+      detail: body?.detail,
+    });
   }
   if (result.response.status === 204) {
     return new Response(null, { status: 204 });
   }
-  return Response.json(result.data ?? null, { status: result.response.status });
+  const replay = result.response.headers.get("Idempotent-Replay");
+  return Response.json(result.data ?? null, {
+    status: result.response.status,
+    headers: replay ? { "Idempotent-Replay": replay } : undefined,
+  });
 }
