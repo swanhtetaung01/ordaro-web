@@ -50,7 +50,7 @@ export function BusinessPicker() {
       setBusy(undefined);
       return;
     }
-    router.replace("/home");
+    router.replace("/products");
   }
 
   async function accept(membershipId: string | undefined) {

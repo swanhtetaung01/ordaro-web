@@ -28,7 +28,7 @@ async function postJson(path: string, body: unknown): Promise<AuthPayload> {
 }
 
 function afterAuth(kind: string | undefined, router: ReturnType<typeof useRouter>) {
-  router.replace(kind === "PICKER" ? "/businesses" : "/home");
+  router.replace(kind === "PICKER" ? "/businesses" : "/products");
 }
 
 export function LoginForm() {

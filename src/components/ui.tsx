@@ -1,13 +1,19 @@
+"use client";
+
 import { useTranslations } from "next-intl";
 
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 
 const nav = [
-  { href: "/sales/new", key: "newSale", soon: true },
-  { href: "/sales/held", key: "heldSales", soon: true },
-  { href: "/sales", key: "salesLog", soon: true },
+  { href: "/sales/new", key: "newSale", soon: false },
+  { href: "/stock", key: "stock", soon: false },
   { href: "/products", key: "products", soon: false },
   { href: "/categories", key: "categories", soon: false },
+  { href: "/suppliers", key: "suppliers", soon: false },
+  { href: "/locations", key: "locations", soon: false },
+  { href: "/staff", key: "staff", soon: false },
+  { href: "/registers", key: "registers", soon: false },
+  { href: "/settings", key: "settings", soon: false },
   { href: "/customers", key: "customers", soon: true },
 ] as const;
 
@@ -21,9 +27,10 @@ export function Shell({
   userName: string;
 }) {
   const t = useTranslations("shell");
+  const pathname = usePathname();
   return (
-    <div className="flex min-h-dvh bg-surface text-ink">
-      <aside className="flex w-60 shrink-0 flex-col gap-4 border-r border-line bg-white px-4 py-5">
+    <div className="flex min-h-dvh flex-col bg-surface text-ink md:flex-row">
+      <aside className="flex w-full shrink-0 flex-col gap-3 border-b border-line bg-white px-4 py-4 md:w-60 md:border-r md:border-b-0 md:py-5">
         <div className="flex items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white">
             O
@@ -33,7 +40,7 @@ export function Shell({
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate">{t("terminal")}</span>
           </span>
         </div>
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav className="flex flex-1 flex-row flex-wrap gap-1 md:flex-col">
           {nav.map((item) =>
             item.soon ? (
               <span
@@ -46,7 +53,11 @@ export function Shell({
             ) : (
               <Link
                 key={item.key}
-                className="rounded-button px-2.5 py-2.5 text-sm font-medium text-slate hover:bg-indigo/5 hover:text-indigo"
+                className={`rounded-button px-2.5 py-2.5 text-sm font-medium ${
+                  pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    ? "bg-indigo/10 text-indigo"
+                    : "text-slate hover:bg-indigo/5 hover:text-indigo"
+                }`}
                 href={item.href}
               >
                 {t(item.key)}
@@ -86,6 +97,7 @@ export function PageHeader({
 
 export function Button({
   variant = "primary",
+  className = "",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" }) {
   const styles = {
@@ -96,7 +108,7 @@ export function Button({
   }[variant];
   return (
     <button
-      className={`rounded-button px-4 py-2.5 text-sm font-semibold disabled:opacity-50 ${styles}`}
+      className={`rounded-button px-4 py-2.5 text-sm font-semibold disabled:opacity-50 ${styles} ${className}`}
       {...props}
     />
   );

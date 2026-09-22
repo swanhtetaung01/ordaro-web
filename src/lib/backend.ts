@@ -125,12 +125,14 @@ export async function refreshToken() {
   return (await cookies()).get(REFRESH)?.value;
 }
 
-/** Calls the backend. On 401, rotates the refresh cookie once and retries. */
+/** Calls the backend. On 401, rotates the refresh cookie once and retries.
+ * Server Components must pass `{ refresh: false }`: cookie writes are only legal in a route handler. */
 export async function withAccess<T>(
   run: (token: string | undefined) => Promise<{ data?: T; error?: unknown; response: Response }>,
+  options?: { refresh?: boolean },
 ) {
   const first = await run(await accessToken());
-  if (first.response.status !== 401) {
+  if (first.response.status !== 401 || options?.refresh === false) {
     return first;
   }
   const renewed = await refreshAccess();
@@ -156,4 +158,47 @@ export function api(token?: string) {
 
 export function errorResponse(status: number, problem: Problem) {
   return Response.json({ code: problem.code ?? "unknown" }, { status });
+}
+
+/** Forwards one backend call. The browser still never sees the bearer token. */
+export async function proxy(path: string, init?: { method?: string; body?: unknown }) {
+  const result = await withAccess(async (token) => {
+    const headers = new Headers();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    const hasBody = init?.body !== undefined;
+    if (hasBody) {
+      headers.set("Content-Type", "application/json");
+    }
+    const response = await fetch(`${apiBase()}${path}`, {
+      method: init?.method ?? "GET",
+      headers,
+      body: hasBody ? JSON.stringify(init.body) : undefined,
+    });
+    const text = await response.text();
+    let data: unknown;
+    let error: unknown;
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as unknown;
+        if (response.ok) {
+          data = parsed;
+        } else {
+          error = parsed;
+        }
+      } catch {
+        error = { code: "unknown", detail: text };
+      }
+    }
+    return { data, error, response };
+  });
+  if (!result.response.ok) {
+    const body = result.error as Problem | undefined;
+    return errorResponse(result.response.status || 502, { code: body?.code ?? body?.title ?? "unknown" });
+  }
+  if (result.response.status === 204) {
+    return new Response(null, { status: 204 });
+  }
+  return Response.json(result.data ?? null, { status: result.response.status });
 }
