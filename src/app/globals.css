@@ -7,6 +7,7 @@
   --surface: #f8fafc;
   --line: #e2e8f0;
   --danger: #ef4444;
+  --slate: #475569;
 }
 
 @theme inline {
@@ -15,6 +16,7 @@
   --color-teal: var(--teal);
   --color-surface: var(--surface);
   --color-line: var(--line);
+  --color-slate: var(--slate);
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;

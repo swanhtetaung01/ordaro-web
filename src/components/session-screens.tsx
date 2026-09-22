@@ -143,6 +143,13 @@ export function SignedInHome() {
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
       <p className="text-sm text-ink/70">{t("next")}</p>
       <button
+        className="rounded-button bg-indigo px-4 py-3 text-left font-medium text-white"
+        onClick={() => router.push("/products")}
+        type="button"
+      >
+        {t("products")}
+      </button>
+      <button
         className="rounded-button border border-line px-4 py-3 text-left font-medium"
         onClick={() => router.push("/businesses")}
         type="button"
