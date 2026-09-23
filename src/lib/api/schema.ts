@@ -155,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["list_1"];
         put?: never;
         post: operations["saveCart"];
         delete?: never;
@@ -251,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post: operations["bind"];
         delete?: never;
@@ -283,7 +283,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         post: operations["createManual"];
         delete?: never;
@@ -331,7 +331,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post: operations["create_3"];
         delete?: never;
@@ -363,7 +363,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post: operations["createManual_1"];
         delete?: never;
@@ -395,7 +395,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post: operations["invite"];
         delete?: never;
@@ -411,7 +411,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post: operations["create_4"];
         delete?: never;
@@ -443,7 +443,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         post: operations["record"];
         delete?: never;
@@ -507,7 +507,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
         post: operations["create_5"];
         delete?: never;
@@ -539,7 +539,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
         post: operations["create_6"];
         delete?: never;
@@ -996,10 +996,10 @@ export interface components {
             /** Format: date-time */
             occurredAt?: string;
             note?: string;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["StockDocumentLineRequest"][];
             post?: boolean;
         };
-        LineRequest: {
+        StockDocumentLineRequest: {
             /** Format: uuid */
             productId: string;
             quantity: number;
@@ -1030,9 +1030,9 @@ export interface components {
             postedAt?: string;
             /** Format: date-time */
             voidedAt?: string;
-            lines?: components["schemas"]["LineView"][];
+            lines?: components["schemas"]["StockDocumentLineView"][];
         };
-        LineView: {
+        StockDocumentLineView: {
             /** Format: int32 */
             position?: number;
             /** Format: uuid */
@@ -1052,10 +1052,16 @@ export interface components {
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             cartDiscountAmount?: number;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["SaleLineRequest"][];
             hold?: boolean;
             /** Format: uuid */
             customerId?: string;
+        };
+        SaleLineRequest: {
+            /** Format: uuid */
+            productId: string;
+            quantity: number;
+            discountAmount?: number;
         };
         PaymentView: {
             /** @enum {string} */
@@ -1064,6 +1070,24 @@ export interface components {
             tenderedAmount?: number;
             changeAmount?: number;
             referenceNo?: string;
+        };
+        SaleLineView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            position?: number;
+            /** Format: uuid */
+            productId?: string;
+            productName?: string;
+            sku?: string;
+            quantity?: number;
+            unitPrice?: number;
+            discountAmount?: number;
+            cartDiscountAllocated?: number;
+            taxRate?: number;
+            taxAmount?: number;
+            lineTotal?: number;
+            unitCost?: number;
         };
         SaleView: {
             /** Format: uuid */
@@ -1079,6 +1103,7 @@ export interface components {
             cashierShiftId?: string;
             /** Format: uuid */
             customerId?: string;
+            customerName?: string;
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             taxInclusive?: boolean;
@@ -1092,7 +1117,7 @@ export interface components {
             dueAmount?: number;
             /** Format: date-time */
             soldAt?: string;
-            lines?: components["schemas"]["LineView"][];
+            lines?: components["schemas"]["SaleLineView"][];
             payments?: components["schemas"]["PaymentView"][];
         };
         LocationSettingsWrite: {
@@ -1175,10 +1200,16 @@ export interface components {
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             cartDiscountAmount?: number;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["SaleLineRequest"][];
             payments: components["schemas"]["PaymentRequest"][];
             /** Format: uuid */
             customerId?: string;
+        };
+        ReturnLineRequest: {
+            /** Format: uuid */
+            saleLineId: string;
+            quantity: number;
+            restock?: boolean;
         };
         ReturnRequest: {
             /** Format: uuid */
@@ -1191,8 +1222,21 @@ export interface components {
             refundMethod: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
             referenceNo?: string;
             reason?: string;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["ReturnLineRequest"][];
             idempotencyKey?: string;
+        };
+        ReturnLineView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            saleLineId?: string;
+            /** Format: uuid */
+            productId?: string;
+            quantity?: number;
+            refundAmount?: number;
+            taxAmount?: number;
+            restock?: boolean;
+            unitCost?: number;
         };
         ReturnView: {
             /** Format: uuid */
@@ -1212,7 +1256,7 @@ export interface components {
             reason?: string;
             /** Format: date-time */
             returnedAt?: string;
-            lines?: components["schemas"]["LineView"][];
+            lines?: components["schemas"]["ReturnLineView"][];
         };
         BindRequest: {
             /** Format: uuid */
@@ -1238,7 +1282,7 @@ export interface components {
             /** Format: date-time */
             revokedAt?: string;
         };
-        ManualRequest: {
+        ManualReceivableRequest: {
             /** Format: uuid */
             customerId: string;
             /** Format: uuid */
@@ -1248,6 +1292,21 @@ export interface components {
             issuedAt?: string;
             /** Format: date */
             dueDate?: string;
+            note?: string;
+        };
+        ReceivableSettlementView: {
+            /** Format: uuid */
+            id?: string;
+            amount?: number;
+            /** @enum {string} */
+            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
             note?: string;
         };
         ReceivableView: {
@@ -1275,22 +1334,7 @@ export interface components {
             /** @enum {string} */
             status?: "OPEN" | "PARTIALLY_SETTLED" | "SETTLED" | "WRITTEN_OFF";
             note?: string;
-            settlements?: components["schemas"]["SettlementView"][];
-        };
-        SettlementView: {
-            /** Format: uuid */
-            id?: string;
-            amount?: number;
-            /** @enum {string} */
-            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
-            /** Format: uuid */
-            locationId?: string;
-            /** Format: uuid */
-            cashierShiftId?: string;
-            referenceNo?: string;
-            /** Format: date-time */
-            paidAt?: string;
-            note?: string;
+            settlements?: components["schemas"]["ReceivableSettlementView"][];
         };
         WriteOffRequest: {
             reason?: string;
@@ -1367,6 +1411,33 @@ export interface components {
         BarcodeWrite: {
             barcode: string;
         };
+        ManualPayableRequest: {
+            /** Format: uuid */
+            supplierId: string;
+            /** Format: uuid */
+            locationId: string;
+            amount: number;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: date */
+            dueDate?: string;
+            note?: string;
+        };
+        PayableSettlementView: {
+            /** Format: uuid */
+            id?: string;
+            amount?: number;
+            /** @enum {string} */
+            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string;
+        };
         PayableView: {
             /** Format: uuid */
             id?: string;
@@ -1391,7 +1462,7 @@ export interface components {
             /** @enum {string} */
             status?: "OPEN" | "PARTIALLY_SETTLED" | "SETTLED" | "CANCELLED";
             note?: string;
-            settlements?: components["schemas"]["SettlementView"][];
+            settlements?: components["schemas"]["PayableSettlementView"][];
         };
         PayRequest: {
             amount: number;
@@ -1515,10 +1586,10 @@ export interface components {
             /** Format: date-time */
             voidedAt?: string;
         };
-        CategoryWrite: {
+        ExpenseCategoryWrite: {
             name: string;
         };
-        CategoryView: {
+        ExpenseCategoryView: {
             /** Format: uuid */
             id?: string;
             name?: string;
@@ -1558,6 +1629,13 @@ export interface components {
         };
         CategoryCreate: {
             name: string;
+            /** Format: uuid */
+            parentId?: string;
+        };
+        CategoryView: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
             /** Format: uuid */
             parentId?: string;
         };
@@ -1711,6 +1789,32 @@ export interface components {
             cashExpenses?: number;
             cashSupplierPayments?: number;
             expectedCash?: number;
+        };
+        SaleSummaryView: {
+            /** Format: uuid */
+            id?: string;
+            receiptNumber?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "HELD" | "COMPLETED" | "VOID" | "PARTIALLY_REFUNDED" | "REFUNDED";
+            /** @enum {string} */
+            channel?: "POS" | "ONLINE" | "ORDER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string;
+            /** @enum {string} */
+            priceType?: "RETAIL" | "WHOLESALE";
+            total?: number;
+            paidAmount?: number;
+            /** Format: int64 */
+            lineCount?: number;
+            /** Format: date-time */
+            soldAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
         };
         StaffEntry: {
             /** Format: uuid */
@@ -2033,6 +2137,33 @@ export interface operations {
             };
         };
     };
+    list_1: {
+        parameters: {
+            query?: {
+                status?: ("DRAFT" | "HELD" | "COMPLETED" | "VOID" | "PARTIALLY_REFUNDED" | "REFUNDED")[];
+                locationId?: string;
+                customerId?: string;
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SaleSummaryView"][];
+                };
+            };
+        };
+    };
     saveCart: {
         parameters: {
             query?: never;
@@ -2175,7 +2306,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2241,7 +2372,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 customerId?: string;
@@ -2275,7 +2406,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ManualRequest"];
+                "application/json": components["schemas"]["ManualReceivableRequest"];
             };
         };
         responses: {
@@ -2342,7 +2473,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -2412,7 +2543,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 supplierId?: string;
@@ -2446,7 +2577,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ManualRequest"];
+                "application/json": components["schemas"]["ManualPayableRequest"];
             };
         };
         responses: {
@@ -2487,7 +2618,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -2531,7 +2662,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -2595,7 +2726,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 locationId?: string;
@@ -2681,7 +2812,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CategoryView"][];
+                    "*/*": components["schemas"]["ExpenseCategoryView"][];
                 };
             };
         };
@@ -2695,7 +2826,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CategoryWrite"];
+                "application/json": components["schemas"]["ExpenseCategoryWrite"];
             };
         };
         responses: {
@@ -2705,7 +2836,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CategoryView"];
+                    "*/*": components["schemas"]["ExpenseCategoryView"];
                 };
             };
         };
@@ -2727,12 +2858,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CategoryView"];
+                    "*/*": components["schemas"]["ExpenseCategoryView"];
                 };
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query?: {
                 q?: string;
@@ -2801,7 +2932,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query?: never;
             header?: never;
