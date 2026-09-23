@@ -155,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["list_1"];
         put?: never;
         post: operations["saveCart"];
         delete?: never;
@@ -228,6 +228,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/registers": {
         parameters: {
             query?: never;
@@ -235,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post: operations["bind"];
         delete?: never;
@@ -260,6 +276,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post: operations["createManual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receivables/{id}/write-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["writeOff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receivables/{id}/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["settle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/products": {
         parameters: {
             query?: never;
@@ -267,9 +331,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_4"];
         put?: never;
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -292,6 +356,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["createManual_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payables/{id}/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/memberships": {
         parameters: {
             query?: never;
@@ -299,7 +395,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_6"];
         put?: never;
         post: operations["invite"];
         delete?: never;
@@ -315,9 +411,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_7"];
         put?: never;
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -340,6 +436,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_8"];
+        put?: never;
+        post: operations["record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["voidExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCategories"];
+        put?: never;
+        post: operations["createCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/categories/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archiveCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_9"];
+        put?: never;
+        post: operations["create_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/categories": {
         parameters: {
             query?: never;
@@ -347,9 +539,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -510,7 +702,7 @@ export interface paths {
         get: operations["get_2"];
         put?: never;
         post?: never;
-        delete: operations["archive"];
+        delete: operations["archive_1"];
         options?: never;
         head?: never;
         patch: operations["update_1"];
@@ -564,6 +756,22 @@ export interface paths {
         patch: operations["update_3"];
         trace?: never;
     };
+    "/customers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_4"];
+        trace?: never;
+    };
     "/categories/{id}": {
         parameters: {
             query?: never;
@@ -577,7 +785,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_4"];
+        patch: operations["update_5"];
         trace?: never;
     };
     "/stock-movements": {
@@ -612,6 +820,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shifts/{id}/drawer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["drawer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/shifts/current": {
         parameters: {
             query?: never;
@@ -628,6 +852,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/returns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receivables/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payables/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/verification": {
         parameters: {
             query?: never;
@@ -636,6 +908,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["verify"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -708,10 +996,10 @@ export interface components {
             /** Format: date-time */
             occurredAt?: string;
             note?: string;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["StockDocumentLineRequest"][];
             post?: boolean;
         };
-        LineRequest: {
+        StockDocumentLineRequest: {
             /** Format: uuid */
             productId: string;
             quantity: number;
@@ -733,6 +1021,8 @@ export interface components {
             counterpartyLocationId?: string;
             /** Format: uuid */
             supplierId?: string;
+            /** Format: uuid */
+            payableId?: string;
             /** Format: date-time */
             occurredAt?: string;
             note?: string;
@@ -740,9 +1030,9 @@ export interface components {
             postedAt?: string;
             /** Format: date-time */
             voidedAt?: string;
-            lines?: components["schemas"]["LineView"][];
+            lines?: components["schemas"]["StockDocumentLineView"][];
         };
-        LineView: {
+        StockDocumentLineView: {
             /** Format: int32 */
             position?: number;
             /** Format: uuid */
@@ -762,8 +1052,16 @@ export interface components {
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             cartDiscountAmount?: number;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["SaleLineRequest"][];
             hold?: boolean;
+            /** Format: uuid */
+            customerId?: string;
+        };
+        SaleLineRequest: {
+            /** Format: uuid */
+            productId: string;
+            quantity: number;
+            discountAmount?: number;
         };
         PaymentView: {
             /** @enum {string} */
@@ -772,6 +1070,24 @@ export interface components {
             tenderedAmount?: number;
             changeAmount?: number;
             referenceNo?: string;
+        };
+        SaleLineView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            position?: number;
+            /** Format: uuid */
+            productId?: string;
+            productName?: string;
+            sku?: string;
+            quantity?: number;
+            unitPrice?: number;
+            discountAmount?: number;
+            cartDiscountAllocated?: number;
+            taxRate?: number;
+            taxAmount?: number;
+            lineTotal?: number;
+            unitCost?: number;
         };
         SaleView: {
             /** Format: uuid */
@@ -785,6 +1101,9 @@ export interface components {
             locationId?: string;
             /** Format: uuid */
             cashierShiftId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string;
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             taxInclusive?: boolean;
@@ -798,7 +1117,7 @@ export interface components {
             dueAmount?: number;
             /** Format: date-time */
             soldAt?: string;
-            lines?: components["schemas"]["LineView"][];
+            lines?: components["schemas"]["SaleLineView"][];
             payments?: components["schemas"]["PaymentView"][];
         };
         LocationSettingsWrite: {
@@ -881,8 +1200,63 @@ export interface components {
             /** @enum {string} */
             priceType?: "RETAIL" | "WHOLESALE";
             cartDiscountAmount?: number;
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["SaleLineRequest"][];
             payments: components["schemas"]["PaymentRequest"][];
+            /** Format: uuid */
+            customerId?: string;
+        };
+        ReturnLineRequest: {
+            /** Format: uuid */
+            saleLineId: string;
+            quantity: number;
+            restock?: boolean;
+        };
+        ReturnRequest: {
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            /** @enum {string} */
+            refundMethod: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            referenceNo?: string;
+            reason?: string;
+            lines: components["schemas"]["ReturnLineRequest"][];
+            idempotencyKey?: string;
+        };
+        ReturnLineView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            saleLineId?: string;
+            /** Format: uuid */
+            productId?: string;
+            quantity?: number;
+            refundAmount?: number;
+            taxAmount?: number;
+            restock?: boolean;
+            unitCost?: number;
+        };
+        ReturnView: {
+            /** Format: uuid */
+            id?: string;
+            returnNumber?: string;
+            /** Format: uuid */
+            saleId?: string;
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            /** @enum {string} */
+            refundMethod?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            refundAmount?: number;
+            taxAmount?: number;
+            referenceNo?: string;
+            reason?: string;
+            /** Format: date-time */
+            returnedAt?: string;
+            lines?: components["schemas"]["ReturnLineView"][];
         };
         BindRequest: {
             /** Format: uuid */
@@ -907,6 +1281,77 @@ export interface components {
             lastSeenAt?: string;
             /** Format: date-time */
             revokedAt?: string;
+        };
+        ManualReceivableRequest: {
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            locationId: string;
+            amount: number;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: date */
+            dueDate?: string;
+            note?: string;
+        };
+        ReceivableSettlementView: {
+            /** Format: uuid */
+            id?: string;
+            amount?: number;
+            /** @enum {string} */
+            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string;
+        };
+        ReceivableView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string;
+            /** Format: uuid */
+            locationId?: string;
+            /** @enum {string} */
+            sourceType?: "SALE" | "ORDER" | "MANUAL";
+            /** Format: uuid */
+            sourceId?: string;
+            referenceNumber?: string;
+            originalAmount?: number;
+            settledAmount?: number;
+            writtenOffAmount?: number;
+            outstandingAmount?: number;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: date */
+            dueDate?: string;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "OPEN" | "PARTIALLY_SETTLED" | "SETTLED" | "WRITTEN_OFF";
+            note?: string;
+            settlements?: components["schemas"]["ReceivableSettlementView"][];
+        };
+        WriteOffRequest: {
+            reason?: string;
+        };
+        SettleRequest: {
+            amount: number;
+            /** @enum {string} */
+            method: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string;
+            idempotencyKey?: string;
         };
         OpeningStockWrite: {
             /** Format: uuid */
@@ -965,6 +1410,73 @@ export interface components {
         };
         BarcodeWrite: {
             barcode: string;
+        };
+        ManualPayableRequest: {
+            /** Format: uuid */
+            supplierId: string;
+            /** Format: uuid */
+            locationId: string;
+            amount: number;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: date */
+            dueDate?: string;
+            note?: string;
+        };
+        PayableSettlementView: {
+            /** Format: uuid */
+            id?: string;
+            amount?: number;
+            /** @enum {string} */
+            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string;
+        };
+        PayableView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            supplierId?: string;
+            supplierName?: string;
+            /** Format: uuid */
+            locationId?: string;
+            /** @enum {string} */
+            sourceType?: "STOCK_DOCUMENT" | "MANUAL";
+            /** Format: uuid */
+            sourceId?: string;
+            referenceNumber?: string;
+            originalAmount?: number;
+            settledAmount?: number;
+            outstandingAmount?: number;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: date */
+            dueDate?: string;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "OPEN" | "PARTIALLY_SETTLED" | "SETTLED" | "CANCELLED";
+            note?: string;
+            settlements?: components["schemas"]["PayableSettlementView"][];
+        };
+        PayRequest: {
+            amount: number;
+            /** @enum {string} */
+            method: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "CREDIT" | "OTHER";
+            /** Format: uuid */
+            locationId: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string;
+            idempotencyKey?: string;
         };
         InviteRequest: {
             displayName: string;
@@ -1038,6 +1550,82 @@ export interface components {
             mismatches?: components["schemas"]["Mismatch"][];
             /** Format: int32 */
             repaired?: number;
+        };
+        ExpenseWrite: {
+            /** Format: uuid */
+            categoryId: string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            amount: number;
+            /** @enum {string} */
+            method: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "OTHER";
+            /** Format: date-time */
+            paidAt?: string;
+            description?: string;
+            referenceNo?: string;
+        };
+        ExpenseView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            categoryName?: string;
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            amount?: number;
+            /** @enum {string} */
+            method?: "CASH" | "KBZ_PAY" | "WAVE_PAY" | "AYA_PAY" | "CB_PAY" | "BANK_TRANSFER" | "OTHER";
+            /** Format: date-time */
+            paidAt?: string;
+            description?: string;
+            referenceNo?: string;
+            /** Format: date-time */
+            voidedAt?: string;
+        };
+        ExpenseCategoryWrite: {
+            name: string;
+        };
+        ExpenseCategoryView: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+        };
+        CustomerWrite: {
+            name?: string;
+            phone?: string;
+            /** @enum {string} */
+            type?: "MEMBER" | "B2B";
+            /** @enum {string} */
+            defaultPriceType?: "RETAIL" | "WHOLESALE";
+            creditLimit?: number;
+            /** Format: int32 */
+            creditTermDays?: number;
+            address?: string;
+            note?: string;
+        };
+        CustomerView: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            phone?: string;
+            /** @enum {string} */
+            type?: "MEMBER" | "B2B";
+            /** @enum {string} */
+            defaultPriceType?: "RETAIL" | "WHOLESALE";
+            creditLimit?: number;
+            /** Format: int32 */
+            creditTermDays?: number;
+            outstanding?: number;
+            availableCredit?: number;
+            /** Format: int32 */
+            loyaltyPoints?: number;
+            address?: string;
+            note?: string;
+            archived?: boolean;
         };
         CategoryCreate: {
             name: string;
@@ -1192,6 +1780,41 @@ export interface components {
             averageCost?: number;
             /** Format: date-time */
             lastMovementAt?: string;
+        };
+        Drawer: {
+            openingFloat?: number;
+            cashSales?: number;
+            cashRepayments?: number;
+            cashRefunds?: number;
+            cashExpenses?: number;
+            cashSupplierPayments?: number;
+            expectedCash?: number;
+        };
+        SaleSummaryView: {
+            /** Format: uuid */
+            id?: string;
+            receiptNumber?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "HELD" | "COMPLETED" | "VOID" | "PARTIALLY_REFUNDED" | "REFUNDED";
+            /** @enum {string} */
+            channel?: "POS" | "ONLINE" | "ORDER";
+            /** Format: uuid */
+            locationId?: string;
+            /** Format: uuid */
+            cashierShiftId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string;
+            /** @enum {string} */
+            priceType?: "RETAIL" | "WHOLESALE";
+            total?: number;
+            paidAmount?: number;
+            /** Format: int64 */
+            lineCount?: number;
+            /** Format: date-time */
+            soldAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
         };
         StaffEntry: {
             /** Format: uuid */
@@ -1514,6 +2137,33 @@ export interface operations {
             };
         };
     };
+    list_1: {
+        parameters: {
+            query?: {
+                status?: ("DRAFT" | "HELD" | "COMPLETED" | "VOID" | "PARTIALLY_REFUNDED" | "REFUNDED")[];
+                locationId?: string;
+                customerId?: string;
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SaleSummaryView"][];
+                };
+            };
+        };
+    };
     saveCart: {
         parameters: {
             query?: never;
@@ -1632,7 +2282,31 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReturnView"];
+                };
+            };
+        };
+    };
+    list_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1698,7 +2372,108 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
+        parameters: {
+            query?: {
+                customerId?: string;
+                status?: string;
+                overdue?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReceivableView"][];
+                };
+            };
+        };
+    };
+    createManual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualReceivableRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReceivableView"];
+                };
+            };
+        };
+    };
+    writeOff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["WriteOffRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReceivableView"];
+                };
+            };
+        };
+    };
+    settle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReceivableView"];
+                };
+            };
+        };
+    };
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1718,7 +2493,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1768,7 +2543,82 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_5: {
+        parameters: {
+            query?: {
+                supplierId?: string;
+                status?: string;
+                overdue?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayableView"][];
+                };
+            };
+        };
+    };
+    createManual_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualPayableRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayableView"];
+                };
+            };
+        };
+    };
+    pay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayableView"];
+                };
+            };
+        };
+    };
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1812,7 +2662,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1832,7 +2682,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1876,7 +2726,213 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_8: {
+        parameters: {
+            query?: {
+                locationId?: string;
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseView"][];
+                };
+            };
+        };
+    };
+    record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseView"];
+                };
+            };
+        };
+    };
+    voidExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseView"];
+                };
+            };
+        };
+    };
+    listCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseCategoryView"][];
+                };
+            };
+        };
+    };
+    createCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseCategoryWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseCategoryView"];
+                };
+            };
+        };
+    };
+    archiveCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseCategoryView"];
+                };
+            };
+        };
+    };
+    list_9: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerView"][];
+                };
+            };
+        };
+    };
+    create_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerView"];
+                };
+            };
+        };
+    };
+    archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerView"];
+                };
+            };
+        };
+    };
+    list_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -1896,7 +2952,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -2158,7 +3214,7 @@ export interface operations {
             };
         };
     };
-    archive: {
+    archive_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2300,7 +3356,55 @@ export interface operations {
             };
         };
     };
+    get_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerView"];
+                };
+            };
+        };
+    };
     update_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerWrite"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerView"];
+                };
+            };
+        };
+    };
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -2373,6 +3477,28 @@ export interface operations {
             };
         };
     };
+    drawer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Drawer"];
+                };
+            };
+        };
+    };
     current: {
         parameters: {
             query: {
@@ -2395,6 +3521,72 @@ export interface operations {
             };
         };
     };
+    get_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReturnView"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReceivableView"];
+                };
+            };
+        };
+    };
+    get_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayableView"];
+                };
+            };
+        };
+    };
     verify: {
         parameters: {
             query?: never;
@@ -2411,6 +3603,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Report"];
+                };
+            };
+        };
+    };
+    get_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExpenseView"];
                 };
             };
         };
