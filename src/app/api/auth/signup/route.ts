@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     password?: string;
     fullName?: string;
     businessName?: string;
+    signupCode?: string;
   };
   const result = await publicCall<Schemas["IssuedTokens"]>(() =>
     api().POST("/auth/signup", {
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
         fullName: body.fullName ?? "",
         businessName: body.businessName ?? "",
         deviceLabel: "ordaro-web",
+        signupCode: body.signupCode || undefined,
       },
     }),
   );

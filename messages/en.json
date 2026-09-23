@@ -10,7 +10,7 @@
   "login": {
     "title": "Sign in",
     "phone": "Phone",
-    "phoneHint": "International format, for example +959…",
+    "phoneHint": "For example 09 7xx xxx xxx",
     "password": "Password",
     "submit": "Sign in",
     "submitting": "Signing in…",
@@ -21,12 +21,14 @@
     "fullName": "Your name",
     "businessName": "Business name",
     "phone": "Phone",
-    "phoneHint": "International format, for example +959…",
+    "phoneHint": "For example 09 7xx xxx xxx",
     "password": "Password",
     "passwordHint": "At least 8 characters",
     "submit": "Start selling",
     "submitting": "Creating…",
-    "login": "Already have an account"
+    "login": "Already have an account",
+    "code": "Sign-up code",
+    "codeHint": "Only if you were given one."
   },
   "picker": {
     "title": "Choose a business",
@@ -48,7 +50,7 @@
   },
   "errors": {
     "invalid_credentials": "Phone or password is wrong.",
-    "invalid_phone": "Use an international number, for example +959…",
+    "invalid_phone": "Use a phone like 09 7xx xxx xxx or +959…",
     "phone_in_use": "That phone is already in use.",
     "validation_failed": "Check the fields and try again.",
     "account_disabled": "This account cannot sign in.",
@@ -73,7 +75,21 @@
     "amount_exceeds_outstanding": "That amount is more than is still open.",
     "invalid_method": "That payment method is not allowed here.",
     "receivable_closed": "That receivable is already closed.",
-    "payable_closed": "That payable is already closed."
+    "payable_closed": "That payable is already closed.",
+    "login_locked": "Too many wrong passwords. Wait 15 minutes and try again.",
+    "wrong_password": "The current password is not right.",
+    "signup_code_required": "This server needs a sign-up code.",
+    "signup_code_invalid": "That sign-up code is not right.",
+    "invalid_pin": "A PIN is exactly 6 digits.",
+    "membership_removed": "That person has been removed.",
+    "product_not_for_sale": "That product is not for sale this way. Check its In the shop / Online settings.",
+    "insufficient_stock": "Not enough stock.",
+    "sale_not_open": "This sale can no longer be changed.",
+    "sale_not_voidable": "A completed sale is undone with a return, not thrown away.",
+    "invalid_range": "The dates are the wrong way round.",
+    "forbidden": "Your role cannot do that.",
+    "unauthenticated": "Sign in again.",
+    "not_found": "Not found."
   },
   "shell": {
     "product": "Ordaro",
@@ -95,7 +111,11 @@
     "expenses": "Expenses",
     "comingSoon": "Coming soon",
     "unknownOrg": "Business",
-    "you": "You"
+    "you": "You",
+    "dashboard": "Dashboard",
+    "account": "Account",
+    "menu": "Menu",
+    "close": "Close"
   },
   "products": {
     "title": "Product catalog",
@@ -227,7 +247,11 @@
     "pin": "PIN",
     "pinHint": "6 digits, for a shared register",
     "add": "Add",
-    "code": "Invite code"
+    "code": "Invite code",
+    "setPin": "Set PIN",
+    "newPin": "New 6-digit PIN",
+    "savePin": "Save PIN",
+    "pinSaved": "{name}'s PIN is set, and their register lockouts are cleared."
   },
   "settings": {
     "title": "Business settings",
@@ -239,7 +263,26 @@
     "negative": "Allow negative stock",
     "costing": "Costing",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "creditLimit": "New customers' credit limit",
+    "creditLimitHint": "What a new customer may owe. For cash on delivery, set it above your usual parcel.",
+    "creditTerm": "Days to pay",
+    "creditTermHint": "When a credit sale falls due — for example, how long the courier takes to pay you.",
+    "types": {
+      "RETAIL": "Shop",
+      "ONLINE": "Online shop",
+      "WHOLESALE": "Wholesale",
+      "DISTRIBUTOR": "Distributor",
+      "MULTI_BRANCH": "Several branches",
+      "FNB": "Food and drink",
+      "SERVICE": "Services",
+      "RENTAL": "Rental",
+      "OTHER": "Other"
+    },
+    "taxRate": "Tax %",
+    "taxRateHint": "The commercial tax your prices include. 0 if you do not charge tax.",
+    "round": "Round totals to",
+    "roundHint": "For example 50 rounds 12,430 to 12,450."
   },
   "stock": {
     "title": "Stock",
@@ -263,7 +306,7 @@
   },
   "sale": {
     "title": "New sale",
-    "subtitle": "Open a shift, attach a customer, then charge. Credit needs a customer.",
+    "subtitle": "In the shop: open a shift, then charge. Online order: record it; no shift needed.",
     "items": "Products",
     "store": "Store",
     "priceType": "Price",
@@ -302,7 +345,15 @@
     "addPayment": "Add another payment",
     "changeOnReceipt": "Change is calculated by the server and shown on the receipt.",
     "cardDisabled": "Card terminal",
-    "exactDisabled": "Exact-amount and change preview"
+    "exactDisabled": "Exact-amount and change preview",
+    "modeStore": "In the shop",
+    "modeOnline": "Online order",
+    "onlineHint": "Paid by KBZPay, WavePay or transfer: pick it and add the transaction number. Cash on delivery: choose or add the buyer and pay with CREDIT. It shows under Receivables until the courier pays you; record that payment there.",
+    "shipFrom": "Ship from",
+    "newCustomer": "New customer",
+    "newCustomerName": "Name",
+    "newCustomerPhone": "Phone (optional)",
+    "addCustomer": "Add and select"
   },
   "held": {
     "title": "Held sales",
@@ -326,7 +377,14 @@
     "reference": "Reference",
     "submitReturn": "Return",
     "returned": "Return recorded",
-    "replayed": "This return was already recorded."
+    "replayed": "This return was already recorded.",
+    "online": "Online",
+    "inShop": "In shop",
+    "chargeCart": "Charge this cart",
+    "chargeHint": "Prices and costs are taken again now; the whole total is paid one way.",
+    "payMethod": "Payment",
+    "charge": "Charge {total}",
+    "voidCart": "Throw this cart away"
   },
   "registers": {
     "title": "Registers",
@@ -429,5 +487,61 @@
     "archived": "Archived",
     "active": "Active",
     "archive": "Archive"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "newSale": "New sale",
+    "cashierHint": "Sales and profit figures are for owners and stock managers. You can start selling from New sale.",
+    "todaySales": "Sales today",
+    "todayProfit": "Gross profit today",
+    "monthSales": "Sales this month",
+    "monthProfit": "Gross profit this month",
+    "monthExpenses": "Expenses this month",
+    "monthRefunds": "Refunds this month",
+    "owedToYou": "Customers owe you",
+    "owedToYouNote": "Credit sales and cash-on-delivery parcels not yet paid",
+    "youOwe": "You owe suppliers",
+    "salesCount": "{count, plural, one {# sale} other {# sales}}",
+    "returnCount": "{count, plural, one {# return} other {# returns}}",
+    "profitNote": "Sales less what the goods cost",
+    "afterExpenses": "{amount} after expenses",
+    "lastTwoWeeks": "Sales, last 14 days",
+    "topProducts": "Best sellers this month",
+    "lowStock": "Running low",
+    "stockFine": "Nothing is below its reorder point.",
+    "paymentMix": "How customers paid this month",
+    "nothingYet": "No sales yet."
+  },
+  "salesLog": {
+    "title": "Sales log",
+    "subtitle": "Every completed sale, newest first. Open one to see the receipt or record a return.",
+    "heldTitle": "Held sales",
+    "heldSubtitle": "Carts parked for later. Open one to charge it or throw it away.",
+    "show": "Show",
+    "showDone": "Completed sales",
+    "showAll": "Everything",
+    "from": "From",
+    "to": "To",
+    "refresh": "Show",
+    "rangeHint": "With no dates: the last 30 days.",
+    "none": "No sales in this range.",
+    "noHeld": "No held sales.",
+    "parked": "Held cart",
+    "walkIn": "Walk-in",
+    "online": "Online",
+    "inShop": "In shop",
+    "items": "{count, plural, one {# item} other {# items}}"
+  },
+  "account": {
+    "title": "Account",
+    "subtitle": "Your sign-in, for every business you belong to.",
+    "changePassword": "Change password",
+    "current": "Current password",
+    "new": "New password",
+    "newHint": "At least 8 characters. Other phones and browsers signed in as you are signed out.",
+    "again": "New password again",
+    "mismatch": "The two new passwords are different.",
+    "save": "Change password",
+    "saved": "Password changed."
   }
 }
