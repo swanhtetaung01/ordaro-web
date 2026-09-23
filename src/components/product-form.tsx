@@ -49,6 +49,10 @@ export function ProductForm({ productId }: { productId?: string }) {
       setCategories(nextCategories);
       setLocations(nextLocations.filter((row) => row.active !== false));
       setCurrency(organization.currencyCode ?? "");
+      // a new product in an online shop is sold online unless unticked
+      if (!productId && organization.businessType === "ONLINE") {
+        setSellOnline(true);
+      }
       const first = nextLocations.find((row) => row.active !== false);
       if (first?.id) {
         setLocationId(first.id);

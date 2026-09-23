@@ -28,7 +28,7 @@ async function postJson(path: string, body: unknown): Promise<AuthPayload> {
 }
 
 function afterAuth(kind: string | undefined, router: ReturnType<typeof useRouter>) {
-  router.replace(kind === "PICKER" ? "/businesses" : "/products");
+  router.replace(kind === "PICKER" ? "/businesses" : "/dashboard");
 }
 
 export function LoginForm() {
@@ -99,6 +99,7 @@ export function SignupForm() {
             businessName: form.get("businessName"),
             phone: form.get("phone"),
             password: form.get("password"),
+            signupCode: form.get("signupCode") || undefined,
           });
           afterAuth(payload.kind, router);
         } catch (caught) {
@@ -122,6 +123,7 @@ export function SignupForm() {
         minLength={8}
         required
       />
+      <Field label={t("code")} hint={t("codeHint")} name="signupCode" autoComplete="off" />
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <button
         className="rounded-button bg-indigo px-4 py-3 font-medium text-white disabled:opacity-60"

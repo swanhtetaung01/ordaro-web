@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setPin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/suppliers": {
         parameters: {
             query?: never;
@@ -612,6 +628,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -860,6 +892,86 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/top-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["topProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/sales-by-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["salesByDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/payment-mix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["paymentMix"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/low-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lowStock"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1133,6 +1245,27 @@ export interface components {
             /** Format: int32 */
             reorderPoint?: number;
             shelfLocation?: string;
+        };
+        PinChange: {
+            pin: string;
+        };
+        MembershipView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            accountId?: string;
+            displayName?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "STOCK_MANAGER" | "CASHIER" | "PACKER";
+            /** Format: uuid */
+            locationId?: string;
+            /** @enum {string} */
+            status?: "INVITED" | "ACTIVE" | "SUSPENDED" | "REMOVED";
+            invitedPhone?: string;
+            /** Format: date-time */
+            inviteExpiresAt?: string;
+            /** Format: date-time */
+            acceptedAt?: string;
         };
         SupplierWrite: {
             name?: string;
@@ -1491,24 +1624,6 @@ export interface components {
             membership?: components["schemas"]["MembershipView"];
             inviteCode?: string;
         };
-        MembershipView: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            accountId?: string;
-            displayName?: string;
-            /** @enum {string} */
-            role?: "OWNER" | "STOCK_MANAGER" | "CASHIER" | "PACKER";
-            /** Format: uuid */
-            locationId?: string;
-            /** @enum {string} */
-            status?: "INVITED" | "ACTIVE" | "SUSPENDED" | "REMOVED";
-            invitedPhone?: string;
-            /** Format: date-time */
-            inviteExpiresAt?: string;
-            /** Format: date-time */
-            acceptedAt?: string;
-        };
         LocationCreate: {
             code: string;
             name: string;
@@ -1659,6 +1774,7 @@ export interface components {
             fullName: string;
             businessName: string;
             deviceLabel?: string;
+            signupCode?: string;
         };
         RefreshRequest: {
             refreshToken: string;
@@ -1667,6 +1783,11 @@ export interface components {
             /** Format: uuid */
             membershipId: string;
             pin: string;
+        };
+        PasswordChange: {
+            currentPassword: string;
+            newPassword: string;
+            deviceLabel?: string;
         };
         LoginRequest: {
             phone: string;
@@ -1702,6 +1823,9 @@ export interface components {
             roundTotalToNearest?: number;
             allowNegativeStock?: boolean;
             timezone?: string;
+            defaultCreditLimit?: number;
+            /** Format: int32 */
+            defaultCreditTermDays?: number;
         };
         OrganizationView: {
             /** Format: uuid */
@@ -1718,6 +1842,9 @@ export interface components {
             /** @enum {string} */
             costingMethod?: "WEIGHTED_AVERAGE";
             timezone?: string;
+            defaultCreditLimit?: number;
+            /** Format: int32 */
+            defaultCreditTermDays?: number;
         };
         StatusChange: {
             /** @enum {string} */
@@ -1815,6 +1942,63 @@ export interface components {
             soldAt?: string;
             /** Format: date-time */
             createdAt?: string;
+        };
+        ProductTotal: {
+            /** Format: uuid */
+            productId?: string;
+            productName?: string;
+            sku?: string;
+            quantity?: number;
+            netRevenue?: number;
+            grossProfit?: number;
+        };
+        Summary: {
+            /** Format: date */
+            from?: string;
+            /** Format: date */
+            to?: string;
+            /** Format: int64 */
+            salesCount?: number;
+            grossSales?: number;
+            netRevenue?: number;
+            taxCollected?: number;
+            cogs?: number;
+            /** Format: int64 */
+            returnCount?: number;
+            refundAmount?: number;
+            revenueReversed?: number;
+            cogsReversed?: number;
+            grossProfit?: number;
+            expenses?: number;
+            receivablesOutstanding?: number;
+            payablesOutstanding?: number;
+        };
+        DayTotal: {
+            /** Format: date */
+            day?: string;
+            /** Format: int64 */
+            salesCount?: number;
+            grossSales?: number;
+            netRevenue?: number;
+            grossProfit?: number;
+        };
+        PaymentMixRow: {
+            method?: string;
+            /** Format: int64 */
+            count?: number;
+            amount?: number;
+        };
+        LowStockRow: {
+            /** Format: uuid */
+            productId?: string;
+            productName?: string;
+            sku?: string;
+            /** Format: uuid */
+            locationId?: string;
+            locationCode?: string;
+            quantity?: number;
+            /** Format: int32 */
+            reorderPoint?: number;
         };
         StaffEntry: {
             /** Format: uuid */
@@ -1951,6 +2135,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LocationSettingsView"];
+                };
+            };
+        };
+    };
+    setPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PinChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MembershipView"];
                 };
             };
         };
@@ -3074,6 +3284,30 @@ export interface operations {
             };
         };
     };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IssuedTokens"];
+                };
+            };
+        };
+    };
     logout: {
         parameters: {
             query?: never;
@@ -3539,6 +3773,126 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ReturnView"];
+                };
+            };
+        };
+    };
+    topProducts: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProductTotal"][];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Summary"];
+                };
+            };
+        };
+    };
+    salesByDay: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DayTotal"][];
+                };
+            };
+        };
+    };
+    paymentMix: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentMixRow"][];
+                };
+            };
+        };
+    };
+    lowStock: {
+        parameters: {
+            query?: {
+                locationId?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LowStockRow"][];
                 };
             };
         };

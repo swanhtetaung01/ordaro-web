@@ -16,6 +16,8 @@ type Customer = Schemas["CustomerView"];
 type Method = Schemas["PaymentRequest"]["method"];
 
 type Line = { productId: string; name: string; quantity: string; discount: string };
+/** In the shop: a register shift and its drawer. Online: an order from Facebook, Viber or the phone — no shift. */
+type Mode = "STORE" | "ONLINE";
 type Tender = { method: Method; amount: string; reference: string };
 
 const cashMethods = ["CASH", "KBZ_PAY", "WAVE_PAY", "AYA_PAY", "CB_PAY", "BANK_TRANSFER", "OTHER"] as const;
@@ -41,6 +43,9 @@ export function SaleDesk() {
   const [customer, setCustomer] = useState<Customer>();
   const [error, setError] = useState<string>();
   const [key] = useState(() => crypto.randomUUID());
+  const [mode, setMode] = useState<Mode>("STORE");
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
   const stores = locations.filter((row) => row.type === "STORE" && row.active !== false);
   const methods: Method[] = customer ? [...cashMethods, "CREDIT"] : [...cashMethods];
@@ -54,6 +59,11 @@ export function SaleDesk() {
       }
     });
     void readJson<Product[]>("/api/catalog/products").then(setProducts);
+    void readJson<Schemas["OrganizationView"]>("/api/catalog/organization").then((org) => {
+      if (org.businessType === "ONLINE") {
+        chooseMode("ONLINE");
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -77,7 +87,8 @@ export function SaleDesk() {
 
   const visible = products.filter((product) => {
     const needle = query.trim().toLowerCase();
-    return product.active !== false && product.sellInPos !== false && (!needle || `${product.name} ${product.sku}`.toLowerCase().includes(needle));
+    const listed = mode === "ONLINE" ? product.sellOnline === true : product.sellInPos !== false;
+    return product.active !== false && listed && (!needle || `${product.name} ${product.sku}`.toLowerCase().includes(needle));
   });
 
   function add(product: Product) {
@@ -96,8 +107,8 @@ export function SaleDesk() {
   function cartBody() {
     return {
       locationId,
-      channel: "POS",
-      cashierShiftId: shift?.id,
+      channel: mode === "ONLINE" ? "ONLINE" : "POS",
+      cashierShiftId: mode === "STORE" ? shift?.id : undefined,
       customerId: customer?.id,
       priceType: priceChoice || undefined,
       cartDiscountAmount: cartDiscount || undefined,
@@ -120,7 +131,7 @@ export function SaleDesk() {
 
   async function checkout() {
     setError(undefined);
-    if (!shift?.id) {
+    if (mode === "STORE" && !shift?.id) {
       setError(t("needShift"));
       return;
     }
@@ -139,6 +150,28 @@ export function SaleDesk() {
     }
   }
 
+  function chooseMode(next: Mode) {
+    setMode(next);
+    // an online order is usually paid by wallet (or on delivery); a shop sale usually in cash
+    setTenders([{ method: next === "ONLINE" ? "KBZ_PAY" : "CASH", amount: "", reference: "" }]);
+  }
+
+  async function createCustomer(event: React.FormEvent) {
+    event.preventDefault();
+    setError(undefined);
+    try {
+      const created = await readJson<Customer>("/api/customers", {
+        method: "POST",
+        body: JSON.stringify({ name: newName.trim(), phone: newPhone.trim() || undefined }),
+      });
+      setNewName("");
+      setNewPhone("");
+      chooseCustomer(created);
+    } catch (caught) {
+      setError(messageFor(caught, errors, (code) => errors.has(code)));
+    }
+  }
+
   function chooseCustomer(next: Customer) {
     setCustomer(next);
     setPriceChoice("");
@@ -150,8 +183,23 @@ export function SaleDesk() {
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         <Panel title={t("items")}>
+          <div className="mb-3 grid grid-cols-2 gap-1 rounded-button border border-line p-1" role="radiogroup">
+            {(["STORE", "ONLINE"] as const).map((value) => (
+              <button
+                aria-checked={mode === value}
+                className={`rounded-button px-3 py-2 text-sm font-semibold ${mode === value ? "bg-indigo text-white" : "text-slate"}`}
+                key={value}
+                onClick={() => chooseMode(value)}
+                role="radio"
+                type="button"
+              >
+                {value === "STORE" ? t("modeStore") : t("modeOnline")}
+              </button>
+            ))}
+          </div>
+          {mode === "ONLINE" ? <p className="mb-3 rounded-control bg-indigo/5 p-3 text-sm">{t("onlineHint")}</p> : null}
           <div className="mb-3 flex flex-wrap gap-2">
-            <SelectField label={t("store")} onChange={(event) => setLocationId(event.target.value)} value={locationId}>
+            <SelectField label={mode === "ONLINE" ? t("shipFrom") : t("store")} onChange={(event) => setLocationId(event.target.value)} value={locationId}>
               {stores.map((row) => (
                 <option key={row.id} value={row.id}>{row.name}</option>
               ))}
@@ -167,7 +215,7 @@ export function SaleDesk() {
             </SelectField>
           </div>
           {customer && priceChoice === "" ? <p className="mb-3 text-sm text-slate">{t("priceFromCustomer")}</p> : null}
-          {shift?.status === "OPEN" ? (
+          {mode === "ONLINE" ? null : shift?.status === "OPEN" ? (
             <form
               className="mb-3 flex flex-col gap-2"
               onSubmit={async (event) => {
@@ -264,6 +312,14 @@ export function SaleDesk() {
               >
                 <Field label={t("customerSearch")} onChange={(event) => setCustomerQuery(event.target.value)} value={customerQuery} />
                 <Button type="submit" variant="secondary">{t("searchCustomers")}</Button>
+              </form>
+            )}
+            {customer ? null : (
+              <form className="mt-4 flex flex-col gap-2 border-t border-line pt-3" onSubmit={(event) => void createCustomer(event)}>
+                <p className="text-sm font-semibold">{t("newCustomer")}</p>
+                <Field label={t("newCustomerName")} onChange={(event) => setNewName(event.target.value)} required value={newName} />
+                <Field label={t("newCustomerPhone")} onChange={(event) => setNewPhone(event.target.value)} type="tel" value={newPhone} />
+                <Button disabled={!newName.trim()} type="submit" variant="secondary">{t("addCustomer")}</Button>
               </form>
             )}
             <ul className="mt-2 flex flex-col gap-2 text-sm">

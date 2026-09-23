@@ -20,6 +20,9 @@ export function StaffManager() {
   const [pin, setPin] = useState("");
   const [code, setCode] = useState<string>();
   const [error, setError] = useState<string>();
+  const [pinFor, setPinFor] = useState<string>();
+  const [newPin, setNewPin] = useState("");
+  const [notice, setNotice] = useState<string>();
 
   function load() {
     return readJson<Member[]>("/api/org/memberships").then(setRows);
@@ -66,13 +69,42 @@ export function StaffManager() {
         {code ? <p className="mt-3 font-mono text-sm">{t("code")}: {code}</p> : null}
       </Panel>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {notice ? <p className="text-sm text-teal">{notice}</p> : null}
       <ul className="flex flex-col gap-2">
         {rows.map((row) => (
           <li className="rounded-panel border border-line bg-white px-4 py-3 text-sm" key={row.id}>
-            <span className="font-semibold">{row.displayName}</span>
-            <span className="ml-2 text-slate">{row.role}</span>
-            <span className="ml-2 text-slate">{row.status}</span>
-            <span className="ml-2 text-slate">{locations.find((location) => location.id === row.locationId)?.name}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">{row.displayName}</span>
+              <span className="text-slate">{row.role}</span>
+              <span className="text-slate">{row.status}</span>
+              <span className="text-slate">{locations.find((location) => location.id === row.locationId)?.name}</span>
+              {row.status !== "REMOVED" ? (
+                <button className="ml-auto font-semibold text-indigo" onClick={() => { setPinFor(pinFor === row.id ? undefined : row.id); setNewPin(""); }} type="button">
+                  {t("setPin")}
+                </button>
+              ) : null}
+            </div>
+            {pinFor === row.id ? (
+              <form
+                className="mt-3 flex flex-wrap items-end gap-2"
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  setError(undefined);
+                  setNotice(undefined);
+                  try {
+                    await readJson(`/api/org/memberships/${row.id}/pin`, { method: "PUT", body: JSON.stringify({ pin: newPin }) });
+                    setNotice(t("pinSaved", { name: row.displayName ?? "" }));
+                    setPinFor(undefined);
+                  } catch (caught) {
+                    const name = caught instanceof Error ? caught.message : "unknown";
+                    setError(errors.has(name) ? errors(name) : errors("unknown"));
+                  }
+                }}
+              >
+                <Field inputMode="numeric" label={t("newPin")} maxLength={6} onChange={(event) => setNewPin(event.target.value)} pattern={"\\d{6}"} required value={newPin} />
+                <Button type="submit">{t("savePin")}</Button>
+              </form>
+            ) : null}
           </li>
         ))}
       </ul>

@@ -1,11 +1,18 @@
 import Decimal from "decimal.js";
 
-/** Display and preview only. Values stay strings until they are formatted. */
+/**
+ * Display only — never put the result back into an input that is sent to the API. Thousands are
+ * grouped and whole amounts drop their decimals: 45000 → "45,000", 642.857 → "642.86".
+ */
 export function formatAmount(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
-  return new Decimal(value).toFixed(2);
+  const [whole, fraction] = new Decimal(value).toFixed(2).split(".");
+  const negative = whole.startsWith("-");
+  const digits = negative ? whole.slice(1) : whole;
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${negative ? "-" : ""}${grouped}${fraction === "00" ? "" : `.${fraction}`}`;
 }
 
 export function marginPercent(retail: string, cost: string) {

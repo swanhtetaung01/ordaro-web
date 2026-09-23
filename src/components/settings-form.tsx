@@ -9,6 +9,8 @@ import { readJson } from "@/lib/read-json";
 
 type Org = Schemas["OrganizationView"];
 
+const businessTypes = ["RETAIL", "ONLINE", "WHOLESALE", "DISTRIBUTOR", "MULTI_BRANCH", "FNB", "SERVICE", "RENTAL", "OTHER"] as const;
+
 export function SettingsForm() {
   const t = useTranslations("settings");
   const errors = useTranslations("errors");
@@ -40,6 +42,11 @@ export function SettingsForm() {
                 method: "PATCH",
                 body: JSON.stringify({
                   name: form.get("name"),
+                  businessType: form.get("businessType"),
+                  defaultCreditLimit: form.get("defaultCreditLimit") || "0",
+                  defaultCreditTermDays: Number(form.get("defaultCreditTermDays") || 0),
+                  defaultTaxRate: form.get("defaultTaxRate") || "0",
+                  roundTotalToNearest: form.get("roundTotalToNearest") || undefined,
                   currencyCode: form.get("currencyCode"),
                   timezone: form.get("timezone"),
                   taxInclusivePricing: form.get("taxInclusive") === "on",
@@ -57,9 +64,19 @@ export function SettingsForm() {
           <Field defaultValue={org.name} label={t("name")} name="name" required />
           <Field defaultValue={org.currencyCode} label={t("currency")} maxLength={3} name="currencyCode" />
           <Field defaultValue={org.timezone} label={t("timezone")} name="timezone" />
-          <SelectField defaultValue={org.businessType} disabled label={t("type")} name="businessType">
-            <option value={org.businessType}>{org.businessType}</option>
+          <SelectField defaultValue={org.businessType} label={t("type")} name="businessType">
+            {businessTypes.map((value) => (
+              <option key={value} value={value}>{t(`types.${value}`)}</option>
+            ))}
           </SelectField>
+          <Field defaultValue={String(org.defaultTaxRate ?? 0)} hint={t("taxRateHint")} inputMode="decimal"
+            label={t("taxRate")} name="defaultTaxRate" />
+          <Field defaultValue={org.roundTotalToNearest ? String(org.roundTotalToNearest) : ""} hint={t("roundHint")}
+            inputMode="decimal" label={t("round")} name="roundTotalToNearest" />
+          <Field defaultValue={String(org.defaultCreditLimit ?? 0)} hint={t("creditLimitHint")} inputMode="decimal"
+            label={t("creditLimit")} name="defaultCreditLimit" />
+          <Field defaultValue={String(org.defaultCreditTermDays ?? 0)} hint={t("creditTermHint")} inputMode="numeric"
+            label={t("creditTerm")} max={365} min={0} name="defaultCreditTermDays" type="number" />
           <label className="flex items-center gap-2 text-sm">
             <input defaultChecked={org.taxInclusivePricing} name="taxInclusive" type="checkbox" />
             {t("taxInclusive")}

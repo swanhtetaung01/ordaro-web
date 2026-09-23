@@ -1,25 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
 
 const nav = [
-  { href: "/sales/new", key: "newSale", soon: false },
-  { href: "/stock", key: "stock", soon: false },
-  { href: "/products", key: "products", soon: false },
-  { href: "/categories", key: "categories", soon: false },
-  { href: "/suppliers", key: "suppliers", soon: false },
-  { href: "/locations", key: "locations", soon: false },
-  { href: "/staff", key: "staff", soon: false },
-  { href: "/registers", key: "registers", soon: false },
-  { href: "/settings", key: "settings", soon: false },
-  { href: "/customers", key: "customers", soon: false },
-  { href: "/receivables", key: "receivables", soon: false },
-  { href: "/payables", key: "payables", soon: false },
-  { href: "/expenses", key: "expenses", soon: false },
-  { href: "/sales/held", key: "heldSales", soon: false },
+  { href: "/dashboard", key: "dashboard" },
+  { href: "/sales/new", key: "newSale" },
+  { href: "/sales", key: "salesLog" },
+  { href: "/sales/held", key: "heldSales" },
+  { href: "/products", key: "products" },
+  { href: "/stock", key: "stock" },
+  { href: "/customers", key: "customers" },
+  { href: "/receivables", key: "receivables" },
+  { href: "/payables", key: "payables" },
+  { href: "/expenses", key: "expenses" },
+  { href: "/categories", key: "categories" },
+  { href: "/suppliers", key: "suppliers" },
+  { href: "/locations", key: "locations" },
+  { href: "/staff", key: "staff" },
+  { href: "/registers", key: "registers" },
+  { href: "/settings", key: "settings" },
+  { href: "/account", key: "account" },
 ] as const;
+
+/** The most specific item wins, so /sales/held does not also light up /sales. */
+function activeHref(pathname: string) {
+  return nav
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
+}
 
 export function Shell({
   children,
@@ -32,44 +44,45 @@ export function Shell({
 }) {
   const t = useTranslations("shell");
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const active = activeHref(pathname);
+  const current = nav.find((item) => item.href === active);
   return (
     <div className="flex min-h-dvh flex-col bg-surface text-ink md:flex-row">
-      <aside className="flex w-full shrink-0 flex-col gap-3 border-b border-line bg-white px-4 py-4 md:w-60 md:border-r md:border-b-0 md:py-5">
+      <aside className="flex w-full shrink-0 flex-col gap-3 border-b border-line bg-white px-4 py-3 md:w-60 md:border-r md:border-b-0 md:py-5">
         <div className="flex items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white">
             O
           </span>
-          <span>
+          <span className="flex-1">
             <span className="block text-base font-extrabold">{t("product")}</span>
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate">{t("terminal")}</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate">{organizationName}</span>
           </span>
+          {/* on a phone the menu folds away; the page gets the screen */}
+          <button
+            aria-expanded={open}
+            className="rounded-button border border-line px-3 py-2 text-sm font-semibold md:hidden"
+            onClick={() => setOpen((value) => !value)}
+            type="button"
+          >
+            {open ? t("close") : current ? t(current.key) : t("menu")}
+          </button>
         </div>
-        <nav className="flex flex-1 flex-row flex-wrap gap-1 md:flex-col">
-          {nav.map((item) =>
-            item.soon ? (
-              <span
-                key={item.key}
-                className="rounded-button px-2.5 py-2.5 text-sm text-slate"
-                title={t("comingSoon")}
-              >
-                {t(item.key)}
-              </span>
-            ) : (
-              <Link
-                key={item.key}
-                className={`rounded-button px-2.5 py-2.5 text-sm font-medium ${
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? "bg-indigo/10 text-indigo"
-                    : "text-slate hover:bg-indigo/5 hover:text-indigo"
-                }`}
-                href={item.href}
-              >
-                {t(item.key)}
-              </Link>
-            ),
-          )}
+        <nav className={`${open ? "flex" : "hidden"} flex-1 flex-col gap-1 md:flex`}>
+          {nav.map((item) => (
+            <Link
+              key={item.key}
+              className={`rounded-button px-2.5 py-2.5 text-sm font-medium ${
+                item.href === active ? "bg-indigo/10 text-indigo" : "text-slate hover:bg-indigo/5 hover:text-indigo"
+              }`}
+              href={item.href}
+              onClick={() => setOpen(false)}
+            >
+              {t(item.key)}
+            </Link>
+          ))}
         </nav>
-        <p className="border-t border-line pt-3 text-sm">
+        <p className={`${open ? "block" : "hidden"} border-t border-line pt-3 text-sm md:block`}>
           <span className="block font-semibold">{userName}</span>
           <span className="text-xs text-slate">{organizationName}</span>
         </p>
