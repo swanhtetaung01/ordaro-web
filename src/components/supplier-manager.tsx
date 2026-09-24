@@ -51,7 +51,7 @@ export function SupplierManager() {
         >
           <Field label={t("name")} onChange={(event) => setName(event.target.value)} required value={name} />
           <Field label={t("phone")} onChange={(event) => setPhone(event.target.value)} value={phone} />
-          <Field label={t("terms")} onChange={(event) => setTerms(event.target.value)} value={terms} />
+          <Field inputMode="numeric" label={t("terms")} onChange={(event) => setTerms(event.target.value)} value={terms} />
           <Button disabled={!name} type="submit">{t("add")}</Button>
         </form>
       </Panel>

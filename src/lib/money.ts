@@ -15,6 +15,14 @@ export function formatAmount(value: string | number | null | undefined) {
   return `${negative ? "-" : ""}${grouped}${fraction === "00" ? "" : `.${fraction}`}`;
 }
 
+/** Display only: a quantity without its trailing zeros, 2.5000 → "2.5", 0.125 → "0.125". */
+export function formatQuantity(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return "—";
+  }
+  return new Decimal(value).toFixed(4).replace(/\.?0+$/, "");
+}
+
 export function marginPercent(retail: string, cost: string) {
   if (!retail || !cost) {
     return null;

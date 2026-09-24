@@ -63,7 +63,7 @@ export function StaffManager() {
               <option key={value} value={value}>{value}</option>
             ))}
           </SelectField>
-          <Field label={t("pin")} hint={t("pinHint")} maxLength={6} onChange={(event) => setPin(event.target.value)} value={pin} />
+          <Field inputMode="numeric" label={t("pin")} hint={t("pinHint")} maxLength={6} onChange={(event) => setPin(event.target.value)} value={pin} />
           <Button disabled={!displayName} type="submit">{t("add")}</Button>
         </form>
         {code ? <p className="mt-3 font-mono text-sm">{t("code")}: {code}</p> : null}

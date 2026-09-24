@@ -114,8 +114,8 @@ export function CustomerDesk() {
           </SelectField>
           {owner ? (
             <>
-              <Field label={t("creditLimit")} onChange={(event) => setForm({ ...form, creditLimit: event.target.value })} value={form.creditLimit} />
-              <Field label={t("creditTerm")} onChange={(event) => setForm({ ...form, creditTermDays: event.target.value })} value={form.creditTermDays} />
+              <Field inputMode="decimal" label={t("creditLimit")} onChange={(event) => setForm({ ...form, creditLimit: event.target.value })} value={form.creditLimit} />
+              <Field inputMode="numeric" label={t("creditTerm")} onChange={(event) => setForm({ ...form, creditTermDays: event.target.value })} value={form.creditTermDays} />
             </>
           ) : null}
           <Field label={t("address")} onChange={(event) => setForm({ ...form, address: event.target.value })} value={form.address} />

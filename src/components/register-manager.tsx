@@ -93,7 +93,7 @@ export function RegisterManager() {
         >
           <Field label={t("credential")} name="deviceCredential" required />
           <Field label={t("membership")} name="membershipId" required />
-          <Field label={t("pin")} maxLength={6} name="pin" required />
+          <Field inputMode="numeric" label={t("pin")} maxLength={6} name="pin" required />
           <Button type="submit">{t("pinLogin")}</Button>
         </form>
       </Panel>

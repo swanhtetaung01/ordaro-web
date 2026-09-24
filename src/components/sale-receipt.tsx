@@ -4,27 +4,39 @@ import { useEffect, useState } from "react";
 import Decimal from "decimal.js";
 import { useTranslations } from "next-intl";
 
-import { Button, Field, PageHeader, Panel, SelectField } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Checkbox,
+  ConfirmButton,
+  Field,
+  Page,
+  PageHeader,
+  PageLoading,
+  Panel,
+  SelectField,
+} from "@/components/ui";
 import { useRouter } from "@/i18n/navigation";
 import type { Schemas } from "@/lib/backend";
-import { formatAmount } from "@/lib/money";
+import { useCodes } from "@/lib/codes";
+import { formatAmount, formatQuantity } from "@/lib/money";
 import { messageFor, readJson, readResponse } from "@/lib/read-json";
 
-type SaleLine = {
-  id?: string;
-  position?: number;
-  productId?: string;
-  productName?: string;
-  quantity?: number | string;
-  lineTotal?: number | string;
-};
+type SaleLine = Schemas["SaleLineView"];
 
 const refundMethods = ["CASH", "KBZ_PAY", "WAVE_PAY", "AYA_PAY", "CB_PAY", "BANK_TRANSFER", "OTHER", "CREDIT"] as const;
 const payMethods = ["CASH", "KBZ_PAY", "WAVE_PAY", "AYA_PAY", "CB_PAY", "BANK_TRANSFER", "OTHER", "CREDIT"] as const;
 
+/** A figure is worth a row on the receipt only when it is not zero. */
+function nonZero(value?: number | string) {
+  return value != null && !new Decimal(value).isZero();
+}
+
 export function SaleReceipt({ saleId }: { saleId: string }) {
   const t = useTranslations("receipt");
   const errors = useTranslations("errors");
+  const codes = useCodes();
   const [sale, setSale] = useState<Schemas["SaleView"]>();
   const [quantities, setQuantities] = useState<Record<string, string>>({});
   const [restock, setRestock] = useState<Record<string, boolean>>({});
@@ -37,6 +49,7 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
   const [payMethod, setPayMethod] = useState<(typeof payMethods)[number]>("CASH");
   const [payReference, setPayReference] = useState("");
   const [completionKey] = useState(() => crypto.randomUUID());
+  const [busy, setBusy] = useState<"charge" | "void" | "return">();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +57,7 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
   }, [saleId]);
 
   if (!sale) {
-    return null;
+    return <PageLoading panels={2} />;
   }
 
   const lines = (sale.lines ?? []) as SaleLine[];
@@ -53,11 +66,14 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
   const returnable = sale.status === "COMPLETED" || sale.status === "PARTIALLY_REFUNDED";
   const parked = sale.status === "HELD" || sale.status === "DRAFT";
   const when = sale.soldAt ? new Date(sale.soldAt).toLocaleString() : undefined;
+  const discounts = new Decimal(sale.lineDiscountTotal ?? 0).plus(sale.cartDiscountAmount ?? 0);
+  const tone = sale.status === "COMPLETED" ? "ok" : parked ? "warn" : sale.status === "VOID" ? "bad" : "muted";
 
   /** Charge a held cart for its whole total with one payment. */
   async function completeCart(event: React.FormEvent) {
     event.preventDefault();
     setError(undefined);
+    setBusy("charge");
     try {
       const done = await readJson<Schemas["SaleView"]>(`/api/sales/${saleId}/complete`, {
         method: "POST",
@@ -74,16 +90,20 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
       setSale(done);
     } catch (caught) {
       setError(messageFor(caught, errors, (code) => errors.has(code)));
+    } finally {
+      setBusy(undefined);
     }
   }
 
   async function voidCart() {
     setError(undefined);
+    setBusy("void");
     try {
       await readJson(`/api/sales/${saleId}/void`, { method: "POST" });
       router.push("/sales/held");
     } catch (caught) {
       setError(messageFor(caught, errors, (code) => errors.has(code)));
+      setBusy(undefined);
     }
   }
   const methods = refundMethods.filter((value) => value !== "CREDIT" || creditSale);
@@ -102,6 +122,7 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
     if (chosen.length === 0 || !sale?.locationId) {
       return;
     }
+    setBusy("return");
     let cashierShiftId: string | undefined;
     if (method === "CASH") {
       try {
@@ -130,75 +151,170 @@ export function SaleReceipt({ saleId }: { saleId: string }) {
       setSale(await readJson<Schemas["SaleView"]>(`/api/sales/${saleId}`));
     } catch (caught) {
       setError(messageFor(caught, errors, (code) => errors.has(code)));
+    } finally {
+      setBusy(undefined);
     }
   }
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
+    <Page width="narrow">
       <PageHeader
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <Badge tone={tone}>{codes("saleStatus", sale.status)}</Badge>
+            <span>{codes("channel", sale.channel)}</span>
+            {when ? <span>· {when}</span> : null}
+          </span>
+        }
         title={sale.receiptNumber ?? t("parked")}
-        subtitle={[sale.status, sale.channel === "ONLINE" ? t("online") : t("inShop"), when].filter(Boolean).join(" · ")}
       />
+
       <Panel>
-        {sale.customerId ? <p className="mb-3 text-sm">{t("customer")} {sale.customerName ?? sale.customerId}</p> : <p className="mb-3 text-sm text-slate">{t("walkIn")}</p>}
-        <ul className="flex flex-col gap-2 text-sm">
-          {lines.map((line) => (
-            <li className="flex justify-between" key={line.id ?? line.position}>
-              <span>{line.productName ?? line.productId} × {line.quantity}</span>
-              <span className="font-mono">{formatAmount(line.lineTotal)}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 font-mono text-lg font-bold">{t("total")} {formatAmount(sale.total)}</p>
-        <p className="text-sm text-slate">{t("tax")} {formatAmount(sale.taxAmount)} · {t("paid")} {formatAmount(sale.paidAmount)} · {t("due")} {formatAmount(sale.dueAmount)}</p>
-        {sale.payments?.map((payment, index) => (
-          <p className="text-sm" key={index}>{payment.method} {formatAmount(payment.amount)} {payment.changeAmount ? `${t("change")} ${formatAmount(payment.changeAmount)}` : ""}</p>
-        ))}
+        <div className="flex flex-col gap-6">
+          <p className="text-sm">
+            {sale.customerId ? (
+              <>
+                <span className="text-slate">{t("customer")}</span>{" "}
+                <span className="font-semibold text-ink">{sale.customerName ?? sale.customerId}</span>
+              </>
+            ) : (
+              <span className="text-slate">{t("walkIn")}</span>
+            )}
+          </p>
+
+          <div>
+            <h2 className="mb-2 text-sm font-semibold text-ink">{t("items")}</h2>
+            <ul className="flex flex-col divide-y divide-line text-sm">
+              {lines.map((line) => (
+                <li className="flex items-start justify-between gap-4 py-2" key={line.id ?? line.position}>
+                  <span className="min-w-0">
+                    <span className="block font-medium text-ink">{line.productName ?? line.productId}</span>
+                    <span className="block text-xs text-slate tabular-nums">
+                      {formatQuantity(line.quantity)} × {formatAmount(line.unitPrice)}
+                    </span>
+                  </span>
+                  <span className="font-semibold tabular-nums">{formatAmount(line.lineTotal)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <dl className="flex flex-col gap-2 border-t border-line pt-4 text-sm">
+            <Row label={t("subtotal")} value={formatAmount(sale.subtotal)} />
+            {discounts.isZero() ? null : <Row label={t("discounts")} value={`−${formatAmount(discounts.toString())}`} />}
+            {nonZero(sale.taxAmount) ? (
+              <Row label={sale.taxInclusive ? t("taxIncluded") : t("tax")} value={formatAmount(sale.taxAmount)} />
+            ) : null}
+            {nonZero(sale.roundingAdjustment) ? <Row label={t("rounding")} value={formatAmount(sale.roundingAdjustment)} /> : null}
+            <div className="flex items-baseline justify-between gap-4 border-t border-line pt-2">
+              <dt className="text-base font-semibold text-ink">{t("total")}</dt>
+              <dd className="text-2xl font-bold text-ink tabular-nums">{formatAmount(sale.total)}</dd>
+            </div>
+            {parked ? null : <Row label={t("paid")} value={formatAmount(sale.paidAmount)} />}
+            {nonZero(sale.dueAmount) ? <Row label={t("due")} strong value={formatAmount(sale.dueAmount)} /> : null}
+          </dl>
+
+          {sale.payments?.length ? (
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-ink">{t("payments")}</h2>
+              <ul className="flex flex-col gap-2 text-sm">
+                {sale.payments.map((payment, index) => (
+                  <li className="flex items-start justify-between gap-4 rounded-button bg-surface px-4 py-2" key={index}>
+                    <span className="min-w-0">
+                      <span className="block font-medium text-ink">{codes("method", payment.method)}</span>
+                      {payment.referenceNo ? (
+                        <span className="block text-xs text-slate">{t("reference")} {payment.referenceNo}</span>
+                      ) : null}
+                    </span>
+                    <span className="text-right tabular-nums">
+                      <span className="block font-semibold">{formatAmount(payment.amount)}</span>
+                      {nonZero(payment.changeAmount) ? (
+                        <span className="block font-semibold text-teal">{t("change")} {formatAmount(payment.changeAmount)}</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </Panel>
+
       {parked ? (
         <Panel title={t("chargeCart")}>
-          <form className="flex flex-col gap-3" onSubmit={(event) => void completeCart(event)}>
+          <form className="flex flex-col gap-4" onSubmit={(event) => void completeCart(event)}>
             <p className="text-sm text-slate">{t("chargeHint")}</p>
             <SelectField label={t("payMethod")} onChange={(event) => setPayMethod(event.target.value as typeof payMethod)} value={payMethod}>
               {payMethods.filter((value) => value !== "CREDIT" || sale.customerId).map((value) => (
-                <option key={value} value={value}>{value}</option>
+                <option key={value} value={value}>{codes("method", value)}</option>
               ))}
             </SelectField>
             {payMethod !== "CASH" && payMethod !== "CREDIT" ? (
               <Field label={t("reference")} onChange={(event) => setPayReference(event.target.value)} value={payReference} />
             ) : null}
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
-            <Button type="submit">{t("charge", { total: formatAmount(sale.total) })}</Button>
-            <Button onClick={() => void voidCart()} type="button" variant="danger">{t("voidCart")}</Button>
+            {error ? <Alert>{error}</Alert> : null}
+            <Button busy={busy === "charge"} className="w-full" disabled={busy === "void"} size="lg" type="submit">
+              {t("charge", { total: formatAmount(sale.total) })}
+            </Button>
           </form>
+          <div className="mt-6 border-t border-line pt-6">
+            <ConfirmButton
+              busy={busy === "void"}
+              confirmLabel={t("voidConfirm")}
+              label={t("voidCart")}
+              onConfirm={() => void voidCart()}
+              question={t("voidQuestion")}
+            />
+          </div>
         </Panel>
       ) : null}
+
       {returnable ? (
         <Panel title={t("returnTitle")}>
-          <form className="flex flex-col gap-3" onSubmit={(event) => void submitReturn(event)}>
-            {lines.map((line) => line.id ? (
-              <div className="grid gap-2 sm:grid-cols-[1fr_120px_auto]" key={line.id}>
-                <p className="text-sm font-semibold">{line.productName ?? line.productId}</p>
-                <Field label={t("returnQty")} onChange={(event) => setQuantities({ ...quantities, [line.id!]: event.target.value })} value={quantities[line.id] ?? ""} />
-                <label className="flex items-end gap-2 pb-2 text-sm">
-                  <input checked={restock[line.id] !== false} onChange={(event) => setRestock({ ...restock, [line.id!]: event.target.checked })} type="checkbox" />
-                  {t("restock")}
-                </label>
-              </div>
-            ) : null)}
+          <form className="flex flex-col gap-4" onSubmit={(event) => void submitReturn(event)}>
+            <ul className="flex flex-col divide-y divide-line">
+              {lines.map((line) => line.id ? (
+                <li className="grid items-end gap-2 py-4 first:pt-0 sm:grid-cols-[1fr_10rem_auto] sm:gap-4" key={line.id}>
+                  <p className="text-sm font-semibold text-ink sm:self-center">
+                    {line.productName ?? line.productId}
+                    <span className="block text-xs font-normal text-slate tabular-nums">× {formatQuantity(line.quantity)}</span>
+                  </p>
+                  <Field
+                    inputMode="decimal"
+                    label={t("returnQty")}
+                    onChange={(event) => setQuantities({ ...quantities, [line.id!]: event.target.value })}
+                    value={quantities[line.id] ?? ""}
+                  />
+                  <Checkbox
+                    checked={restock[line.id] !== false}
+                    label={t("restock")}
+                    onChange={(event) => setRestock({ ...restock, [line.id!]: event.target.checked })}
+                  />
+                </li>
+              ) : null)}
+            </ul>
             <SelectField label={t("refundMethod")} onChange={(event) => setMethod(event.target.value as typeof method)} value={method}>
               {methods.map((value) => (
-                <option key={value} value={value}>{value}</option>
+                <option key={value} value={value}>{codes("method", value)}</option>
               ))}
             </SelectField>
             <Field label={t("reason")} onChange={(event) => setReason(event.target.value)} value={reason} />
             <Field label={t("reference")} onChange={(event) => setReference(event.target.value)} value={reference} />
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
-            {notice ? <p className="text-sm text-teal">{notice}</p> : null}
-            <Button type="submit">{t("submitReturn")}</Button>
+            {error ? <Alert>{error}</Alert> : null}
+            {notice ? <Alert tone="success">{notice}</Alert> : null}
+            <Button busy={busy === "return"} className="self-start" type="submit" variant="secondary">{t("submitReturn")}</Button>
           </form>
         </Panel>
       ) : null}
+    </Page>
+  );
+}
+
+function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className={strong ? "font-semibold text-amber-800" : "text-slate"}>{label}</dt>
+      <dd className={`tabular-nums ${strong ? "font-semibold text-amber-800" : "text-ink"}`}>{value}</dd>
     </div>
   );
 }
