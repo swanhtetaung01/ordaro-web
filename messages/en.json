@@ -117,7 +117,7 @@
     "menu": "Menu",
     "close": "Close",
     "groupSell": "Sell",
-    "groupStock": "Stock",
+    "groupStock": "Inventory",
     "groupMoney": "Money",
     "groupSetup": "Setup",
     "signOut": "Sign out",
@@ -382,7 +382,8 @@
     "goToCart": "Cart and payment",
     "removeLine": "Remove {name}",
     "removePayment": "Remove this payment",
-    "noCustomers": "No customer found. Add them below."
+    "noCustomers": "No customer found. Add them below.",
+    "modeLabel": "Where the sale happens"
   },
   "held": {
     "title": "Held sales",

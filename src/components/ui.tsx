@@ -75,10 +75,36 @@ function activeHref(pathname: string) {
 export const focusRing =
   "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2";
 
+/** The same ring drawn inside the edge, for rows in a list that clips its corners. */
+export const insetFocusRing =
+  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-inset";
+
 /** An inline link inside a sentence or under a form. */
 export const linkClasses = `rounded-sm font-semibold text-teal underline-offset-4 hover:underline ${focusRing}`;
 
 const iconButton = `inline-flex size-12 shrink-0 items-center justify-center rounded-button text-slate transition hover:bg-slate-100 hover:text-ink motion-reduce:transition-none ${focusRing}`;
+
+/** A square button that shows only an icon; the label is what a screen reader says and the tooltip shows. */
+export function IconButton({
+  label,
+  tone = "default",
+  className = "",
+  children,
+  ...props
+}: { label: string; tone?: "default" | "danger" } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const colours = tone === "danger" ? "text-slate hover:bg-red-50 hover:text-danger" : "text-slate hover:bg-slate-100 hover:text-ink";
+  return (
+    <button
+      aria-label={label}
+      className={`inline-flex size-12 shrink-0 items-center justify-center rounded-button transition motion-reduce:transition-none sm:size-10 ${focusRing} ${colours} ${className}`}
+      title={label}
+      type="button"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
 
 const menuRow = `flex min-h-12 w-full items-center gap-2 rounded-button px-4 text-sm transition-colors motion-reduce:transition-none md:min-h-10 ${focusRing}`;
 
@@ -228,7 +254,7 @@ function Navigation({ active, onNavigate }: { active?: string; onNavigate?: () =
       <ul>{link(home)}</ul>
       {groups.map((group) => (
         <div className="mt-4" key={group.key}>
-          <p className="px-4 pb-2 text-xs font-semibold text-slate" id={`${id}-${group.key}`}>
+          <p className="px-4 pb-2 text-xs font-semibold text-slate-500" id={`${id}-${group.key}`}>
             {t(group.key)}
           </p>
           <ul aria-labelledby={`${id}-${group.key}`}>{group.items.map((item) => link(item))}</ul>
@@ -331,23 +357,28 @@ const variants: Record<Variant, string> = {
   ghost: "text-teal not-disabled:hover:bg-teal-50 not-disabled:active:bg-teal-100",
 };
 
+/** "lg" is for the one action a screen exists for, such as Charge: 48px everywhere, larger text. */
+type Size = "md" | "lg";
+
 /** Classes for anything that looks like a button: a button, or a link that goes somewhere. */
-export function buttonClasses(variant: Variant = "primary", className = "") {
-  return `inline-flex min-h-12 select-none items-center justify-center gap-2 rounded-button px-4 py-2 text-center text-sm font-semibold transition motion-reduce:transition-none not-disabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-10 ${focusRing} ${variants[variant]} ${className}`;
+export function buttonClasses(variant: Variant = "primary", className = "", size: Size = "md") {
+  const sizing = size === "lg" ? "min-h-12 px-6 text-base" : "min-h-12 px-4 text-sm sm:min-h-10";
+  return `inline-flex select-none items-center justify-center gap-2 rounded-button py-2 text-center font-semibold transition motion-reduce:transition-none not-disabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 ${sizing} ${focusRing} ${variants[variant]} ${className}`;
 }
 
 export function Button({
   variant = "primary",
+  size = "md",
   busy = false,
   className = "",
   disabled,
   children,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; busy?: boolean }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; busy?: boolean }) {
   return (
     <button
       aria-busy={busy || undefined}
-      className={buttonClasses(variant, className)}
+      className={buttonClasses(variant, className, size)}
       disabled={disabled || busy}
       {...props}
     >
@@ -360,10 +391,11 @@ export function Button({
 /** A link that looks like a button: "New sale", "Add product". */
 export function ButtonLink({
   variant = "primary",
+  size = "md",
   className = "",
   ...props
-}: React.ComponentProps<typeof Link> & { variant?: Variant }) {
-  return <Link className={buttonClasses(variant, className)} {...props} />;
+}: React.ComponentProps<typeof Link> & { variant?: Variant; size?: Size }) {
+  return <Link className={buttonClasses(variant, className, size)} {...props} />;
 }
 
 const control =

@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Alert, Button, buttonClasses, LoadingRows, SignOut } from "@/components/ui";
 import { useRouter } from "@/i18n/navigation";
 import type { Membership } from "@/lib/backend";
 
 type Session =
   | { authenticated: false; memberships: Membership[] }
   | { authenticated: true; kind?: string; memberships: Membership[] };
+
+const quietSignOut = buttonClasses("ghost", "self-center");
 
 export function BusinessPicker() {
   const t = useTranslations("picker");
@@ -18,19 +21,24 @@ export function BusinessPicker() {
   const [busy, setBusy] = useState<string>();
   const [error, setError] = useState<string>();
 
+  // state changes only once the answer is in, never synchronously inside the effect
+  const load = useCallback(
+    () =>
+      fetch("/api/auth/session")
+        .then((response) => response.json() as Promise<Session>)
+        .then((body) => {
+          if (!body.authenticated) {
+            router.replace("/login");
+            return;
+          }
+          setSession(body);
+        }),
+    [router],
+  );
+
   useEffect(() => {
     void load();
-  }, []);
-
-  async function load() {
-    const response = await fetch("/api/auth/session");
-    const body = (await response.json()) as Session;
-    if (!body.authenticated) {
-      router.replace("/login");
-      return;
-    }
-    setSession(body);
-  }
+  }, [load]);
 
   async function enter(organizationId: string | undefined) {
     if (!organizationId) {
@@ -74,41 +82,46 @@ export function BusinessPicker() {
   const rows = session?.memberships ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      {session && rows.length === 0 ? <p className="text-sm text-ink/70">{t("empty")}</p> : null}
-      <ul className="flex flex-col gap-3">
-        {rows.map((row) => (
-          <li key={row.membershipId} className="rounded-button border border-line p-3">
-            <p className="font-medium">{row.organizationName}</p>
-            <p className="text-sm text-ink/70">
-              {row.displayName}
-              {row.status === "INVITED" ? ` · ${t("invited")}` : null}
-            </p>
-            {row.status === "INVITED" ? (
-              <button
-                className="mt-3 rounded-button bg-teal px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-                disabled={busy === row.membershipId}
-                onClick={() => accept(row.membershipId)}
-                type="button"
-              >
-                {busy === row.membershipId ? t("accepting") : t("accept")}
-              </button>
-            ) : (
-              <button
-                className="mt-3 rounded-button bg-indigo px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-                disabled={busy === row.organizationId || row.status !== "ACTIVE"}
-                onClick={() => enter(row.organizationId)}
-                type="button"
-              >
-                {busy === row.organizationId ? t("entering") : t("enter")}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <SignOut label={t("logout")} />
+    <div className="flex flex-col gap-6">
+      <h1 className="text-2xl font-bold tracking-tight text-ink">{t("title")}</h1>
+      {!session ? (
+        <LoadingRows className="h-20" rows={2} />
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-slate">{t("empty")}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {rows.map((row) => (
+            <li
+              className="flex flex-col gap-4 rounded-panel border border-line p-4 sm:flex-row sm:items-center sm:justify-between"
+              key={row.membershipId}
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-ink">{row.organizationName}</p>
+                <p className="text-sm text-slate">
+                  {row.displayName}
+                  {row.status === "INVITED" ? ` · ${t("invited")}` : null}
+                </p>
+              </div>
+              {row.status === "INVITED" ? (
+                <Button busy={busy === row.membershipId} onClick={() => accept(row.membershipId)} type="button" variant="secondary">
+                  {busy === row.membershipId ? t("accepting") : t("accept")}
+                </Button>
+              ) : (
+                <Button
+                  busy={busy === row.organizationId}
+                  disabled={row.status !== "ACTIVE"}
+                  onClick={() => enter(row.organizationId)}
+                  type="button"
+                >
+                  {busy === row.organizationId ? t("entering") : t("enter")}
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {error ? <Alert>{error}</Alert> : null}
+      <SignOut className={quietSignOut} label={t("logout")} />
     </div>
   );
 }
@@ -135,47 +148,24 @@ export function SignedInHome() {
   }, [router]);
 
   if (!ready) {
-    return null;
+    return <LoadingRows className="h-12" rows={3} />;
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      <p className="text-sm text-ink/70">{t("next")}</p>
-      <button
-        className="rounded-button bg-indigo px-4 py-3 text-left font-medium text-white"
-        onClick={() => router.push("/products")}
-        type="button"
-      >
-        {t("products")}
-      </button>
-      <button
-        className="rounded-button border border-line px-4 py-3 text-left font-medium"
-        onClick={() => router.push("/businesses")}
-        type="button"
-      >
-        {t("businesses")}
-      </button>
-      <SignOut label={t("logout")} pendingLabel={t("signingOut")} />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">{t("title")}</h1>
+        <p className="text-sm text-slate">{t("next")}</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Button className="w-full" onClick={() => router.push("/products")} type="button">
+          {t("products")}
+        </Button>
+        <Button className="w-full" onClick={() => router.push("/businesses")} type="button" variant="secondary">
+          {t("businesses")}
+        </Button>
+      </div>
+      <SignOut className={quietSignOut} label={t("logout")} pendingLabel={t("signingOut")} />
     </div>
-  );
-}
-
-function SignOut({ label, pendingLabel }: { label: string; pendingLabel?: string }) {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-  return (
-    <button
-      className="text-sm text-teal disabled:opacity-60"
-      disabled={pending}
-      onClick={async () => {
-        setPending(true);
-        await fetch("/api/auth/logout", { method: "POST" });
-        router.replace("/login");
-      }}
-      type="button"
-    >
-      {pending && pendingLabel ? pendingLabel : label}
-    </button>
   );
 }

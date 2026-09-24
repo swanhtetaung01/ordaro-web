@@ -3,9 +3,26 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button, Field, PageHeader, Panel, SelectField, Soon } from "@/components/ui";
+import { ArrowDownIcon, CartIcon, ChevronDownIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import {
+  Alert,
+  Badge,
+  Button,
+  buttonClasses,
+  Field,
+  focusRing,
+  IconButton,
+  insetFocusRing,
+  LoadingRows,
+  Page,
+  PageHeader,
+  Panel,
+  SearchField,
+  SelectField,
+} from "@/components/ui";
 import { useRouter } from "@/i18n/navigation";
 import type { Schemas } from "@/lib/backend";
+import { useCodes } from "@/lib/codes";
 import { formatAmount, addQuantities } from "@/lib/money";
 import { messageFor, readJson } from "@/lib/read-json";
 
@@ -19,17 +36,24 @@ type Line = { productId: string; name: string; quantity: string; discount: strin
 /** In the shop: a register shift and its drawer. Online: an order from Facebook, Viber or the phone — no shift. */
 type Mode = "STORE" | "ONLINE";
 type Tender = { method: Method; amount: string; reference: string };
+/** Which request is in flight, so its button spins and the others wait. */
+type Busy = "charge" | "hold" | "shift" | "customer" | "search";
+/** Where an error is shown: next to the thing that failed. */
+type ErrorAt = "shift" | "customer" | "cart";
 
 const cashMethods = ["CASH", "KBZ_PAY", "WAVE_PAY", "AYA_PAY", "CB_PAY", "BANK_TRANSFER", "OTHER"] as const;
 
 export function SaleDesk() {
   const t = useTranslations("sale");
   const errors = useTranslations("errors");
+  const codes = useCodes();
   const router = useRouter();
   const [locations, setLocations] = useState<Location[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [locationId, setLocationId] = useState("");
   const [shift, setShift] = useState<Shift>();
+  const [shiftFor, setShiftFor] = useState<string>();
   const [drawer, setDrawer] = useState<Schemas["Drawer"]>();
   const [floatAmount, setFloatAmount] = useState("0");
   const [counted, setCounted] = useState("");
@@ -40,8 +64,11 @@ export function SaleDesk() {
   const [priceChoice, setPriceChoice] = useState<"" | "RETAIL" | "WHOLESALE">("RETAIL");
   const [customerQuery, setCustomerQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [searched, setSearched] = useState(false);
   const [customer, setCustomer] = useState<Customer>();
   const [error, setError] = useState<string>();
+  const [errorAt, setErrorAt] = useState<ErrorAt>("cart");
+  const [busy, setBusy] = useState<Busy>();
   const [key] = useState(() => crypto.randomUUID());
   const [mode, setMode] = useState<Mode>("STORE");
   const [newName, setNewName] = useState("");
@@ -49,6 +76,8 @@ export function SaleDesk() {
 
   const stores = locations.filter((row) => row.type === "STORE" && row.active !== false);
   const methods: Method[] = customer ? [...cashMethods, "CREDIT"] : [...cashMethods];
+  // the shift answer for the store now picked has arrived, open or not
+  const shiftKnown = shiftFor === locationId;
 
   useEffect(() => {
     void readJson<Location[]>("/api/org/locations").then((rows) => {
@@ -58,7 +87,10 @@ export function SaleDesk() {
         setLocationId(store.id);
       }
     });
-    void readJson<Product[]>("/api/catalog/products").then(setProducts);
+    void readJson<Product[]>("/api/catalog/products").then((rows) => {
+      setProducts(rows);
+      setProductsLoaded(true);
+    });
     void readJson<Schemas["OrganizationView"]>("/api/catalog/organization").then((org) => {
       if (org.businessType === "ONLINE") {
         chooseMode("ONLINE");
@@ -75,7 +107,8 @@ export function SaleDesk() {
       .catch(() => {
         setShift(undefined);
         setDrawer(undefined);
-      });
+      })
+      .finally(() => setShiftFor(locationId));
   }, [locationId]);
 
   useEffect(() => {
@@ -90,6 +123,11 @@ export function SaleDesk() {
     const listed = mode === "ONLINE" ? product.sellOnline === true : product.sellInPos !== false;
     return product.active !== false && listed && (!needle || `${product.name} ${product.sku}`.toLowerCase().includes(needle));
   });
+
+  function fail(at: ErrorAt, caught: unknown) {
+    setErrorAt(at);
+    setError(messageFor(caught, errors, (code) => errors.has(code)));
+  }
 
   function add(product: Product) {
     if (!product.id) {
@@ -131,6 +169,7 @@ export function SaleDesk() {
 
   async function checkout() {
     setError(undefined);
+    setErrorAt("cart");
     if (mode === "STORE" && !shift?.id) {
       setError(t("needShift"));
       return;
@@ -139,6 +178,7 @@ export function SaleDesk() {
       setError(errors("customer_required"));
       return;
     }
+    setBusy("charge");
     try {
       const sale = await readJson<Schemas["SaleView"]>("/api/sales/checkout", {
         method: "POST",
@@ -146,7 +186,61 @@ export function SaleDesk() {
       });
       router.push(`/sales/${sale.id}`);
     } catch (caught) {
-      setError(messageFor(caught, errors, (code) => errors.has(code)));
+      fail("cart", caught);
+      setBusy(undefined);
+    }
+  }
+
+  async function hold() {
+    setError(undefined);
+    setBusy("hold");
+    try {
+      const parked = await readJson<Schemas["SaleView"]>("/api/sales", {
+        method: "POST",
+        body: JSON.stringify({ ...cartBody(), hold: true }),
+      });
+      router.push(`/sales/${parked.id}`);
+    } catch (caught) {
+      fail("cart", caught);
+      setBusy(undefined);
+    }
+  }
+
+  async function openShift(event: React.FormEvent) {
+    event.preventDefault();
+    setError(undefined);
+    setBusy("shift");
+    try {
+      const opened = await readJson<Shift>("/api/sales/shifts", {
+        method: "POST",
+        body: JSON.stringify({ locationId, openingFloat: floatAmount || "0" }),
+      });
+      setShift(opened);
+    } catch (caught) {
+      fail("shift", caught);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function closeShift(event: React.FormEvent) {
+    event.preventDefault();
+    if (!shift?.id) {
+      return;
+    }
+    setError(undefined);
+    setBusy("shift");
+    try {
+      await readJson(`/api/sales/shifts/${shift.id}/close`, {
+        method: "POST",
+        body: JSON.stringify({ countedCash: counted || "0" }),
+      });
+      setShift(undefined);
+      setDrawer(undefined);
+    } catch (caught) {
+      fail("shift", caught);
+    } finally {
+      setBusy(undefined);
     }
   }
 
@@ -156,9 +250,27 @@ export function SaleDesk() {
     setTenders([{ method: next === "ONLINE" ? "KBZ_PAY" : "CASH", amount: "", reference: "" }]);
   }
 
+  async function searchCustomers(event: React.FormEvent) {
+    event.preventDefault();
+    const search = new URLSearchParams();
+    if (customerQuery.trim()) {
+      search.set("q", customerQuery.trim());
+    }
+    setBusy("search");
+    try {
+      setCustomers(await readJson<Customer[]>(`/api/customers?${search}`));
+      setSearched(true);
+    } catch (caught) {
+      fail("customer", caught);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
   async function createCustomer(event: React.FormEvent) {
     event.preventDefault();
     setError(undefined);
+    setBusy("customer");
     try {
       const created = await readJson<Customer>("/api/customers", {
         method: "POST",
@@ -168,7 +280,9 @@ export function SaleDesk() {
       setNewPhone("");
       chooseCustomer(created);
     } catch (caught) {
-      setError(messageFor(caught, errors, (code) => errors.has(code)));
+      fail("customer", caught);
+    } finally {
+      setBusy(undefined);
     }
   }
 
@@ -176,18 +290,38 @@ export function SaleDesk() {
     setCustomer(next);
     setPriceChoice("");
     setCustomers([]);
+    setSearched(false);
   }
 
+  function showCart() {
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("cart")?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+  }
+
+  const found = customers.filter((row) => !row.archived);
+  const storeSelect = (
+    <SelectField label={mode === "ONLINE" ? t("shipFrom") : t("store")} onChange={(event) => setLocationId(event.target.value)} value={locationId}>
+      {stores.map((row) => (
+        <option key={row.id} value={row.id}>{row.name}</option>
+      ))}
+    </SelectField>
+  );
+
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-        <Panel title={t("items")}>
-          <div className="mb-3 grid grid-cols-2 gap-1 rounded-button border border-line p-1" role="radiogroup">
+    <Page className="pb-32 sm:pb-32 lg:pb-8">
+      <PageHeader
+        actions={
+          <div
+            aria-label={t("modeLabel")}
+            className="grid w-full grid-cols-2 gap-1 rounded-button border border-line bg-white p-1 shadow-xs sm:w-auto"
+            role="radiogroup"
+          >
             {(["STORE", "ONLINE"] as const).map((value) => (
               <button
                 aria-checked={mode === value}
-                className={`rounded-button px-3 py-2 text-sm font-semibold ${mode === value ? "bg-indigo text-white" : "text-slate"}`}
+                className={`min-h-10 rounded-md px-4 text-sm font-semibold transition motion-reduce:transition-none ${focusRing} ${
+                  mode === value ? "bg-indigo text-white shadow-xs" : "text-slate hover:bg-slate-100 hover:text-ink"
+                }`}
                 key={value}
                 onClick={() => chooseMode(value)}
                 role="radio"
@@ -197,96 +331,146 @@ export function SaleDesk() {
               </button>
             ))}
           </div>
-          {mode === "ONLINE" ? <p className="mb-3 rounded-control bg-indigo/5 p-3 text-sm">{t("onlineHint")}</p> : null}
-          <div className="mb-3 flex flex-wrap gap-2">
-            <SelectField label={mode === "ONLINE" ? t("shipFrom") : t("store")} onChange={(event) => setLocationId(event.target.value)} value={locationId}>
-              {stores.map((row) => (
-                <option key={row.id} value={row.id}>{row.name}</option>
-              ))}
-            </SelectField>
-            <SelectField
-              label={t("priceType")}
-              onChange={(event) => setPriceChoice(event.target.value as typeof priceChoice)}
-              value={priceChoice}
+        }
+        subtitle={t("subtitle")}
+        title={t("title")}
+      />
+      {mode === "ONLINE" ? <Alert tone="info">{t("onlineHint")}</Alert> : null}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="flex min-w-0 flex-col gap-6">
+          {mode === "STORE" ? (
+            <Panel
+              actions={
+                shiftKnown ? (
+                  <Badge tone={shift?.status === "OPEN" ? "ok" : "muted"}>
+                    {shift?.status === "OPEN" ? t("shiftOpen") : t("shiftClosed")}
+                  </Badge>
+                ) : null
+              }
+              title={t("shift")}
             >
-              {customer ? <option value="">{t("customerPrice", { price: customer.defaultPriceType ?? "RETAIL" })}</option> : null}
-              <option value="RETAIL">RETAIL</option>
-              <option value="WHOLESALE">WHOLESALE</option>
-            </SelectField>
-          </div>
-          {customer && priceChoice === "" ? <p className="mb-3 text-sm text-slate">{t("priceFromCustomer")}</p> : null}
-          {mode === "ONLINE" ? null : shift?.status === "OPEN" ? (
-            <form
-              className="mb-3 flex flex-col gap-2"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                await readJson(`/api/sales/shifts/${shift.id}/close`, {
-                  method: "POST",
-                  body: JSON.stringify({ countedCash: counted || "0" }),
-                });
-                setShift(undefined);
-                setDrawer(undefined);
-              }}
-            >
-              {drawer ? (
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-sm">
-                  <dt>{t("openingFloat")}</dt><dd>{formatAmount(drawer.openingFloat)}</dd>
-                  <dt>{t("cashSales")}</dt><dd>{formatAmount(drawer.cashSales)}</dd>
-                  <dt>{t("cashRepayments")}</dt><dd>{formatAmount(drawer.cashRepayments)}</dd>
-                  <dt>{t("cashRefunds")}</dt><dd>{formatAmount(drawer.cashRefunds)}</dd>
-                  <dt>{t("cashExpenses")}</dt><dd>{formatAmount(drawer.cashExpenses)}</dd>
-                  <dt>{t("cashSupplierPayments")}</dt><dd>{formatAmount(drawer.cashSupplierPayments)}</dd>
-                  <dt className="font-bold">{t("expectedCash")}</dt><dd className="font-bold">{formatAmount(drawer.expectedCash)}</dd>
-                </dl>
-              ) : null}
-              <div className="flex flex-wrap items-end gap-2">
-                <Field label={t("counted")} onChange={(event) => setCounted(event.target.value)} value={counted} />
-                <Button type="submit" variant="secondary">{t("closeShift")}</Button>
+              <div className="flex flex-col gap-4">
+                {storeSelect}
+                {!shiftKnown ? (
+                  <LoadingRows className="h-10" rows={1} />
+                ) : shift?.status === "OPEN" ? (
+                  <details className="group">
+                    <summary
+                      className={`-mx-2 flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-button px-2 text-sm font-semibold text-ink hover:bg-slate-50 sm:min-h-10 [&::-webkit-details-marker]:hidden ${focusRing}`}
+                    >
+                      {t("closeShift")}
+                      <ChevronDownIcon className="size-4 text-slate transition group-open:rotate-180 motion-reduce:transition-none" />
+                    </summary>
+                    <form className="mt-4 flex flex-col gap-4" onSubmit={(event) => void closeShift(event)}>
+                      {drawer ? (
+                        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm">
+                          <dt className="text-slate">{t("openingFloat")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.openingFloat)}</dd>
+                          <dt className="text-slate">{t("cashSales")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.cashSales)}</dd>
+                          <dt className="text-slate">{t("cashRepayments")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.cashRepayments)}</dd>
+                          <dt className="text-slate">{t("cashRefunds")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.cashRefunds)}</dd>
+                          <dt className="text-slate">{t("cashExpenses")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.cashExpenses)}</dd>
+                          <dt className="text-slate">{t("cashSupplierPayments")}</dt>
+                          <dd className="text-right tabular-nums">{formatAmount(drawer.cashSupplierPayments)}</dd>
+                          <dt className="border-t border-line pt-2 font-semibold text-ink">{t("expectedCash")}</dt>
+                          <dd className="border-t border-line pt-2 text-right font-semibold tabular-nums">{formatAmount(drawer.expectedCash)}</dd>
+                        </dl>
+                      ) : null}
+                      <div className="flex flex-wrap items-end gap-2">
+                        <Field className="flex-1" inputMode="decimal" label={t("counted")} onChange={(event) => setCounted(event.target.value)} value={counted} />
+                        <Button busy={busy === "shift"} type="submit" variant="secondary">{t("closeShift")}</Button>
+                      </div>
+                    </form>
+                  </details>
+                ) : (
+                  <form className="flex flex-col gap-4" onSubmit={(event) => void openShift(event)}>
+                    <p className="text-sm text-slate">{t("needShift")}</p>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <Field className="flex-1" inputMode="decimal" label={t("float")} onChange={(event) => setFloatAmount(event.target.value)} value={floatAmount} />
+                      <Button busy={busy === "shift"} disabled={!locationId} type="submit">{t("openShift")}</Button>
+                    </div>
+                  </form>
+                )}
+                {error && errorAt === "shift" ? <Alert>{error}</Alert> : null}
               </div>
-            </form>
-          ) : (
-            <form
-              className="mb-3 flex flex-wrap items-end gap-2"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                const opened = await readJson<Shift>("/api/sales/shifts", {
-                  method: "POST",
-                  body: JSON.stringify({ locationId, openingFloat: floatAmount || "0" }),
-                });
-                setShift(opened);
-              }}
-            >
-              <Field label={t("float")} onChange={(event) => setFloatAmount(event.target.value)} value={floatAmount} />
-              <Button disabled={!locationId} type="submit">{t("openShift")}</Button>
-            </form>
-          )}
-          <input
-            className="mb-3 w-full rounded-control border border-line px-3 py-2 text-sm"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("search")}
-            value={query}
-          />
-          <ul className="flex max-h-64 flex-col gap-1 overflow-auto">
-            {visible.slice(0, 20).map((product) => (
-              <li key={product.id}>
-                <button className="w-full rounded-button px-2 py-2 text-left text-sm hover:bg-indigo/5" onClick={() => add(product)} type="button">
-                  <span className="font-semibold">{product.name}</span>
-                  <span className="ml-2 font-mono text-slate">{formatAmount(product.retailPrice)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3"><Soon>{t("cardDisabled")}</Soon></p>
-        </Panel>
-        <div className="flex flex-col gap-4">
+            </Panel>
+          ) : null}
+
+          <Panel title={t("items")}>
+            <div className="flex flex-col gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {mode === "ONLINE" ? storeSelect : null}
+                <SelectField
+                  label={t("priceType")}
+                  onChange={(event) => setPriceChoice(event.target.value as typeof priceChoice)}
+                  value={priceChoice}
+                >
+                  {customer ? (
+                    <option value="">{t("customerPrice", { price: codes("priceType", customer.defaultPriceType ?? "RETAIL") })}</option>
+                  ) : null}
+                  <option value="RETAIL">{codes("priceType", "RETAIL")}</option>
+                  <option value="WHOLESALE">{codes("priceType", "WHOLESALE")}</option>
+                </SelectField>
+              </div>
+              {customer && priceChoice === "" ? <p className="text-sm text-slate">{t("priceFromCustomer")}</p> : null}
+              <SearchField label={t("search")} onChange={(event) => setQuery(event.target.value)} value={query} />
+              {!productsLoaded ? (
+                <LoadingRows className="h-12" rows={4} />
+              ) : visible.length === 0 ? (
+                <p className="rounded-button border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate">
+                  {query.trim() ? t("noMatch", { query: query.trim() }) : mode === "ONLINE" ? t("noOnlineProducts") : t("noProducts")}
+                </p>
+              ) : (
+                <>
+                  <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-button border border-line lg:max-h-[32rem] lg:overflow-y-auto">
+                    {visible.slice(0, 20).map((product) => (
+                      <li key={product.id}>
+                        <button
+                          className={`flex min-h-12 w-full items-center gap-4 px-4 py-2 text-left text-sm transition-colors hover:bg-indigo/5 active:bg-indigo/10 motion-reduce:transition-none ${insetFocusRing}`}
+                          onClick={() => add(product)}
+                          type="button"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium text-ink">{product.name}</span>
+                            {product.sku ? <span className="block truncate text-xs text-slate">{product.sku}</span> : null}
+                          </span>
+                          <span className="font-semibold text-ink tabular-nums">{formatAmount(product.retailPrice)}</span>
+                          <PlusIcon className="size-5 shrink-0 text-indigo" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {visible.length > 20 ? <p className="text-xs text-slate">{t("moreResults")}</p> : null}
+                </>
+              )}
+            </div>
+          </Panel>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-6">
           <Panel title={t("customer")}>
             {customer ? (
-              <div className="text-sm">
-                <p className="font-semibold">{customer.name}</p>
-                <p className="font-mono text-slate">{customer.phone}</p>
-                <p>{t("outstanding")} {formatAmount(customer.outstanding)} · {t("available")} {formatAmount(customer.availableCredit)}</p>
+              <div className="flex flex-col gap-4">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-ink">{customer.name}</p>
+                  {customer.phone ? <p className="text-sm text-slate tabular-nums">{customer.phone}</p> : null}
+                </div>
+                <dl className="grid grid-cols-2 gap-4 rounded-button bg-surface p-4 text-sm">
+                  <div>
+                    <dt className="text-slate">{t("outstanding")}</dt>
+                    <dd className="font-semibold tabular-nums">{formatAmount(customer.outstanding)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate">{t("available")}</dt>
+                    <dd className="font-semibold tabular-nums">{formatAmount(customer.availableCredit)}</dd>
+                  </div>
+                </dl>
                 <Button
-                  className="mt-2"
                   onClick={() => {
                     setCustomer(undefined);
                     setPriceChoice("RETAIL");
@@ -299,101 +483,166 @@ export function SaleDesk() {
                 </Button>
               </div>
             ) : (
-              <form
-                className="flex flex-col gap-2"
-                onSubmit={async (event) => {
-                  event.preventDefault();
-                  const search = new URLSearchParams();
-                  if (customerQuery.trim()) {
-                    search.set("q", customerQuery.trim());
-                  }
-                  setCustomers(await readJson<Customer[]>(`/api/customers?${search}`));
-                }}
-              >
-                <Field label={t("customerSearch")} onChange={(event) => setCustomerQuery(event.target.value)} value={customerQuery} />
-                <Button type="submit" variant="secondary">{t("searchCustomers")}</Button>
-              </form>
-            )}
-            {customer ? null : (
-              <form className="mt-4 flex flex-col gap-2 border-t border-line pt-3" onSubmit={(event) => void createCustomer(event)}>
-                <p className="text-sm font-semibold">{t("newCustomer")}</p>
-                <Field label={t("newCustomerName")} onChange={(event) => setNewName(event.target.value)} required value={newName} />
-                <Field label={t("newCustomerPhone")} onChange={(event) => setNewPhone(event.target.value)} type="tel" value={newPhone} />
-                <Button disabled={!newName.trim()} type="submit" variant="secondary">{t("addCustomer")}</Button>
-              </form>
-            )}
-            <ul className="mt-2 flex flex-col gap-2 text-sm">
-              {customers.filter((row) => !row.archived).map((row) => (
-                <li className="flex items-center justify-between gap-2" key={row.id}>
-                  <span>{row.name} <span className="text-slate">{row.phone}</span></span>
-                  <button className="font-semibold text-indigo" onClick={() => chooseCustomer(row)} type="button">{t("selectCustomer")}</button>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-          <Panel title={t("cart")}>
-            <ul className="flex flex-col gap-2 text-sm">
-              {lines.map((line) => (
-                <li key={line.productId}>
-                  <p className="font-semibold">{line.name}</p>
-                  <div className="mt-1 grid grid-cols-2 gap-2">
-                    <Field label={t("qty")} onChange={(event) => setLines((current) => current.map((row) => row.productId === line.productId ? { ...row, quantity: event.target.value } : row))} value={line.quantity} />
-                    <Field label={t("lineDiscount")} onChange={(event) => setLines((current) => current.map((row) => row.productId === line.productId ? { ...row, discount: event.target.value } : row))} value={line.discount} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Field label={t("cartDiscount")} onChange={(event) => setCartDiscount(event.target.value)} value={cartDiscount} />
-            {tenders.map((tender, index) => (
-              <div className="mt-3 grid gap-2" key={index}>
-                <SelectField
-                  label={t("method")}
-                  onChange={(event) => {
-                    const method = event.target.value as Method;
-                    setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, method } : row));
-                  }}
-                  value={tender.method}
-                >
-                  {methods.filter((method) => method !== "CREDIT" || !tenders.some((row, rowIndex) => rowIndex !== index && row.method === "CREDIT")).map((value) => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </SelectField>
-                <Field label={tender.method === "CASH" ? t("tendered") : t("amount")} onChange={(event) => setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, amount: event.target.value } : row))} value={tender.amount} />
-                {tender.method !== "CASH" && tender.method !== "CREDIT" ? (
-                  <Field label={t("reference")} onChange={(event) => setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, reference: event.target.value } : row))} value={tender.reference} />
+              <div className="flex flex-col gap-4">
+                <form className="flex items-end gap-2" onSubmit={(event) => void searchCustomers(event)}>
+                  <Field className="flex-1" label={t("customerSearch")} onChange={(event) => setCustomerQuery(event.target.value)} value={customerQuery} />
+                  <Button busy={busy === "search"} type="submit" variant="secondary">{t("searchCustomers")}</Button>
+                </form>
+                {found.length > 0 ? (
+                  <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-button border border-line">
+                    {found.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          className={`flex min-h-12 w-full items-center gap-4 px-4 py-2 text-left text-sm transition-colors hover:bg-indigo/5 motion-reduce:transition-none ${insetFocusRing}`}
+                          onClick={() => chooseCustomer(row)}
+                          type="button"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium text-ink">{row.name}</span>
+                            {row.phone ? <span className="block text-xs text-slate tabular-nums">{row.phone}</span> : null}
+                          </span>
+                          <span className="font-semibold text-indigo">{t("selectCustomer")}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : searched ? (
+                  <p className="text-sm text-slate">{t("noCustomers")}</p>
                 ) : null}
+                <form className="flex flex-col gap-4 border-t border-line pt-4" onSubmit={(event) => void createCustomer(event)}>
+                  <p className="text-sm font-semibold text-ink">{t("newCustomer")}</p>
+                  <Field label={t("newCustomerName")} onChange={(event) => setNewName(event.target.value)} required value={newName} />
+                  <Field label={t("newCustomerPhone")} onChange={(event) => setNewPhone(event.target.value)} type="tel" value={newPhone} />
+                  <Button busy={busy === "customer"} disabled={!newName.trim()} type="submit" variant="secondary">
+                    <PlusIcon className="size-4" />
+                    {t("addCustomer")}
+                  </Button>
+                </form>
               </div>
-            ))}
-            <Button
-              className="mt-2"
-              onClick={() => setTenders((current) => [...current, { method: "CASH", amount: "", reference: "" }])}
-              type="button"
-              variant="ghost"
-            >
-              {t("addPayment")}
-            </Button>
-            <p className="mt-2 text-xs text-slate">{t("changeOnReceipt")}</p>
-            <Soon>{t("exactDisabled")}</Soon>
-            {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
-            <Button className="mt-3 w-full" disabled={lines.length === 0} onClick={() => void checkout()} type="button">{t("charge")}</Button>
-            <Button
-              className="mt-2 w-full"
-              disabled={lines.length === 0}
-              onClick={async () => {
-                const parked = await readJson<Schemas["SaleView"]>("/api/sales", {
-                  method: "POST",
-                  body: JSON.stringify({ ...cartBody(), hold: true }),
-                });
-                router.push(`/sales/${parked.id}`);
-              }}
-              type="button"
-              variant="secondary"
-            >
-              {t("hold")}
-            </Button>
+            )}
+            {error && errorAt === "customer" ? <div className="mt-4"><Alert>{error}</Alert></div> : null}
+          </Panel>
+
+          <Panel
+            actions={lines.length > 0 ? <Badge tone="info">{t("cartCount", { count: lines.length })}</Badge> : null}
+            className="scroll-mt-24"
+            id="cart"
+            title={t("cart")}
+          >
+            <div className="flex flex-col gap-6">
+              {lines.length === 0 ? (
+                <p className="flex flex-col items-center gap-2 rounded-button border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate">
+                  <CartIcon className="size-6" />
+                  {t("cartEmpty")}
+                </p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-line">
+                  {lines.map((line) => (
+                    <li className="flex flex-col gap-2 py-4 first:pt-0" key={line.productId}>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="min-w-0 pt-2 font-semibold text-ink">{line.name}</p>
+                        <IconButton
+                          label={t("removeLine", { name: line.name })}
+                          onClick={() => setLines((current) => current.filter((row) => row.productId !== line.productId))}
+                          tone="danger"
+                        >
+                          <TrashIcon />
+                        </IconButton>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field inputMode="decimal" label={t("qty")} onChange={(event) => setLines((current) => current.map((row) => row.productId === line.productId ? { ...row, quantity: event.target.value } : row))} value={line.quantity} />
+                        <Field inputMode="decimal" label={t("lineDiscount")} onChange={(event) => setLines((current) => current.map((row) => row.productId === line.productId ? { ...row, discount: event.target.value } : row))} value={line.discount} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Field inputMode="decimal" label={t("cartDiscount")} onChange={(event) => setCartDiscount(event.target.value)} value={cartDiscount} />
+
+              <div className="flex flex-col gap-4 border-t border-line pt-6" role="group" aria-labelledby="payment-title">
+                <h3 className="text-sm font-semibold text-ink" id="payment-title">{t("paymentTitle")}</h3>
+                {tenders.map((tender, index) => (
+                  <div className={`flex flex-col gap-2 ${tenders.length > 1 ? "rounded-button border border-line p-4" : ""}`} key={index}>
+                    <div className="flex items-end gap-2">
+                      <SelectField
+                        className="flex-1"
+                        label={t("method")}
+                        onChange={(event) => {
+                          const method = event.target.value as Method;
+                          setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, method } : row));
+                        }}
+                        value={tender.method}
+                      >
+                        {methods.filter((method) => method !== "CREDIT" || !tenders.some((row, rowIndex) => rowIndex !== index && row.method === "CREDIT")).map((value) => (
+                          <option key={value} value={value}>{codes("method", value)}</option>
+                        ))}
+                      </SelectField>
+                      {index > 0 ? (
+                        <IconButton
+                          label={t("removePayment")}
+                          onClick={() => setTenders((current) => current.filter((_, rowIndex) => rowIndex !== index))}
+                          tone="danger"
+                        >
+                          <TrashIcon />
+                        </IconButton>
+                      ) : null}
+                    </div>
+                    <Field inputMode="decimal" label={tender.method === "CASH" ? t("tendered") : t("amount")} onChange={(event) => setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, amount: event.target.value } : row))} value={tender.amount} />
+                    {tender.method !== "CASH" && tender.method !== "CREDIT" ? (
+                      <Field label={t("reference")} onChange={(event) => setTenders((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, reference: event.target.value } : row))} value={tender.reference} />
+                    ) : null}
+                  </div>
+                ))}
+                <Button
+                  className="-ml-4 self-start"
+                  onClick={() => setTenders((current) => [...current, { method: "CASH", amount: "", reference: "" }])}
+                  type="button"
+                  variant="ghost"
+                >
+                  <PlusIcon className="size-4" />
+                  {t("addPayment")}
+                </Button>
+                <p className="text-xs text-slate">{t("changeOnReceipt")}</p>
+              </div>
+
+              {error && errorAt === "cart" ? <Alert>{error}</Alert> : null}
+              <div className="flex flex-col gap-2">
+                <Button
+                  busy={busy === "charge"}
+                  className="w-full"
+                  disabled={lines.length === 0 || (busy !== undefined && busy !== "charge")}
+                  onClick={() => void checkout()}
+                  size="lg"
+                  type="button"
+                >
+                  {t("charge")}
+                </Button>
+                <Button
+                  busy={busy === "hold"}
+                  className="w-full"
+                  disabled={lines.length === 0 || (busy !== undefined && busy !== "hold")}
+                  onClick={() => void hold()}
+                  type="button"
+                  variant="secondary"
+                >
+                  {t("hold")}
+                </Button>
+              </div>
+            </div>
           </Panel>
         </div>
       </div>
-    </div>
+
+      {/* on a phone the cart is far below the products: a bar that is always there takes you to it */}
+      {lines.length > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-[0_-4px_16px_rgb(15_23_42/0.08)] backdrop-blur md:left-64 lg:hidden">
+          <button className={buttonClasses("primary", "w-full", "lg")} onClick={showCart} type="button">
+            <CartIcon className="size-5" />
+            {t("cartCount", { count: lines.length })} · {t("goToCart")}
+            <ArrowDownIcon className="size-4" />
+          </button>
+        </div>
+      ) : null}
+    </Page>
   );
 }

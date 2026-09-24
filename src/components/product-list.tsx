@@ -3,11 +3,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Badge, Button, PageHeader, Soon } from "@/components/ui";
+import { BoxIcon, PlusIcon } from "@/components/icons";
+import {
+  Alert,
+  Badge,
+  Button,
+  ButtonLink,
+  EmptyState,
+  focusRing,
+  insetFocusRing,
+  LoadingRows,
+  Page,
+  PageHeader,
+  SearchField,
+  SelectField,
+} from "@/components/ui";
 import { Link } from "@/i18n/navigation";
 import type { Schemas } from "@/lib/backend";
 import { addQuantities, formatAmount, weightedAverageCost } from "@/lib/money";
-import { readJson } from "@/lib/read-json";
+import { messageFor, readJson } from "@/lib/read-json";
 
 type Product = Schemas["ProductView"];
 type Category = Schemas["CategoryView"];
@@ -15,6 +29,8 @@ type Balance = Schemas["BalanceView"];
 
 export function ProductList() {
   const t = useTranslations("products");
+  const common = useTranslations("common");
+  const errors = useTranslations("errors");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [balances, setBalances] = useState<Balance[]>([]);
@@ -23,6 +39,7 @@ export function ProductList() {
   const [categoryId, setCategoryId] = useState("");
   const [stock, setStock] = useState("active");
   const [error, setError] = useState<string>();
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     void Promise.all([
@@ -37,8 +54,9 @@ export function ProductList() {
         setBalances(nextBalances);
         setCurrency(organization.currencyCode ?? "");
       })
-      .catch((caught: Error) => setError(caught.message));
-  }, []);
+      .catch((caught) => setError(messageFor(caught, errors, (code) => errors.has(code))))
+      .finally(() => setLoaded(true));
+  }, [errors]);
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -65,96 +83,142 @@ export function ProductList() {
     });
   }, [products, balances, categories, query, categoryId, stock]);
 
+  const addProduct = (
+    <ButtonLink href="/products/new">
+      <PlusIcon className="size-5" />
+      {t("add")}
+    </ButtonLink>
+  );
+  const money = (label: string) => (currency ? `${label} (${currency})` : label);
+
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
-      <PageHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
-        actions={
-          <>
-            <Button disabled type="button" variant="secondary">
-              {t("import")}
-            </Button>
-            <Button disabled type="button" variant="secondary">
-              {t("export")}
-            </Button>
-            <Link className="rounded-button bg-indigo px-4 py-2.5 text-sm font-semibold text-white" href="/products/new">
-              {t("add")}
-            </Link>
-          </>
-        }
-      />
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          className="min-w-0 flex-1 rounded-control border border-line bg-white px-3 py-2 text-sm"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("search")}
-          value={query}
-        />
-        <select
-          className="rounded-control border border-line bg-white px-3 py-2 text-sm"
-          onChange={(event) => setCategoryId(event.target.value)}
-          value={categoryId}
-        >
+    <Page>
+      <PageHeader actions={addProduct} subtitle={t("subtitle")} title={t("title")} />
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_12rem]">
+        <SearchField label={t("search")} onChange={(event) => setQuery(event.target.value)} value={query} />
+        <SelectField hideLabel label={t("category")} onChange={(event) => setCategoryId(event.target.value)} value={categoryId}>
           <option value="">{t("allCategories")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
             </option>
           ))}
-        </select>
-        <select
-          className="rounded-control border border-line bg-white px-3 py-2 text-sm"
-          onChange={(event) => setStock(event.target.value)}
-          value={stock}
-        >
+        </SelectField>
+        <SelectField hideLabel label={t("stock")} onChange={(event) => setStock(event.target.value)} value={stock}>
           <option value="active">{t("stockActive")}</option>
           <option value="inactive">{t("stockInactive")}</option>
           <option value="low">{t("stockLow")}</option>
           <option value="all">{t("stockAll")}</option>
-        </select>
+        </SelectField>
       </div>
-      <Soon>{t("batch")}</Soon>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <div className="overflow-x-auto rounded-panel border border-line bg-white">
-        <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="text-xs uppercase text-slate">
-            <tr>
-              {["product", "sku", "barcode", "category", "cost", "retail", "wholesale", "stock", "status"].map((key) => (
-                <th className="px-3 py-3 font-semibold" key={key}>
-                  {t(key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+      {error ? <Alert>{error}</Alert> : null}
+      {!loaded ? (
+        <LoadingRows rows={6} />
+      ) : error ? null : products.length === 0 ? (
+        <EmptyState action={addProduct} hint={t("emptyHint")} icon={<BoxIcon className="size-6" />} title={t("empty")} />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          action={
+            <Button
+              onClick={() => {
+                setQuery("");
+                setCategoryId("");
+                setStock("active");
+              }}
+              type="button"
+              variant="secondary"
+            >
+              {common("clearFilters")}
+            </Button>
+          }
+          hint={t("noMatchHint")}
+          title={t("noMatch")}
+        />
+      ) : (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-slate">{t("count", { count: rows.length })}</p>
+
+          {/* phones and tablets: one row per product, the whole row opens it */}
+          <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-panel border border-line bg-white shadow-xs lg:hidden">
             {rows.map((product) => {
               const stockRows = balances.filter((row) => row.productId === product.id);
               const quantity = addQuantities(stockRows.map((row) => row.quantity));
-              const cost = weightedAverageCost(stockRows);
-              const category = categories.find((row) => row.id === product.categoryId)?.name ?? "—";
+              const category = categories.find((row) => row.id === product.categoryId)?.name;
               return (
-                <tr className="border-t border-line" key={product.id}>
-                  <td className="px-3 py-3 font-semibold">
-                    <Link href={`/products/${product.id}`}>{product.name}</Link>
-                  </td>
-                  <td className="px-3 py-3 font-mono">{product.sku}</td>
-                  <td className="px-3 py-3 font-mono">{product.barcodes?.[0] ?? "—"}</td>
-                  <td className="px-3 py-3">{category}</td>
-                  <td className="px-3 py-3 font-mono">{cost ? `${formatAmount(cost)} ${currency}` : "—"}</td>
-                  <td className="px-3 py-3 font-mono">{formatAmount(product.retailPrice)} {currency}</td>
-                  <td className="px-3 py-3 font-mono">{formatAmount(product.wholesalePrice)} {currency}</td>
-                  <td className="px-3 py-3 font-mono">{product.trackInventory ? quantity : "—"}</td>
-                  <td className="px-3 py-3">
-                    <StockBadge active={product.active} quantity={quantity} reorderPoint={product.reorderPoint} tracked={product.trackInventory} />
-                  </td>
-                </tr>
+                <li key={product.id}>
+                  <Link
+                    className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-slate-50 motion-reduce:transition-none ${insetFocusRing}`}
+                    href={`/products/${product.id}`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold text-ink">{product.name}</span>
+                      <span className="block truncate text-xs text-slate">
+                        {[product.sku, category, product.trackInventory ? `${t("stock")} ${quantity}` : null].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="text-sm font-semibold text-ink tabular-nums">
+                        {formatAmount(product.retailPrice)} <span className="text-xs font-medium text-slate">{currency}</span>
+                      </span>
+                      <StockBadge active={product.active} quantity={quantity} reorderPoint={product.reorderPoint} tracked={product.trackInventory} />
+                    </span>
+                  </Link>
+                </li>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </ul>
+
+          {/* desktop: the full table */}
+          <div className="hidden overflow-x-auto rounded-panel border border-line bg-white shadow-xs lg:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-line bg-surface text-xs font-semibold text-slate">
+                <tr>
+                  <th className="px-4 py-4" scope="col">{t("product")}</th>
+                  <th className="px-4 py-4" scope="col">{t("sku")}</th>
+                  <th className="hidden px-4 py-4 2xl:table-cell" scope="col">{t("barcode")}</th>
+                  <th className="px-4 py-4" scope="col">{t("category")}</th>
+                  <th className="px-4 py-4 text-right" scope="col">{money(t("cost"))}</th>
+                  <th className="px-4 py-4 text-right" scope="col">{money(t("retail"))}</th>
+                  <th className="hidden px-4 py-4 text-right xl:table-cell" scope="col">{money(t("wholesale"))}</th>
+                  <th className="px-4 py-4 text-right" scope="col">{t("stock")}</th>
+                  <th className="px-4 py-4" scope="col">{t("status")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {rows.map((product) => {
+                  const stockRows = balances.filter((row) => row.productId === product.id);
+                  const quantity = addQuantities(stockRows.map((row) => row.quantity));
+                  const cost = weightedAverageCost(stockRows);
+                  const category = categories.find((row) => row.id === product.categoryId)?.name ?? "—";
+                  return (
+                    <tr className="transition-colors hover:bg-slate-50 motion-reduce:transition-none" key={product.id}>
+                      <td className="px-4 py-4">
+                        <Link
+                          className={`rounded-sm font-semibold text-ink hover:text-indigo hover:underline ${focusRing}`}
+                          href={`/products/${product.id}`}
+                        >
+                          {product.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs whitespace-nowrap text-slate">{product.sku}</td>
+                      <td className="hidden px-4 py-4 font-mono text-xs whitespace-nowrap text-slate 2xl:table-cell">{product.barcodes?.[0] ?? "—"}</td>
+                      <td className="px-4 py-4 text-slate">{category}</td>
+                      <td className="px-4 py-4 text-right tabular-nums">{cost ? formatAmount(cost) : "—"}</td>
+                      <td className="px-4 py-4 text-right font-semibold tabular-nums">{formatAmount(product.retailPrice)}</td>
+                      <td className="hidden px-4 py-4 text-right tabular-nums xl:table-cell">{formatAmount(product.wholesalePrice)}</td>
+                      <td className="px-4 py-4 text-right tabular-nums">{product.trackInventory ? quantity : "—"}</td>
+                      <td className="px-4 py-4">
+                        <StockBadge active={product.active} quantity={quantity} reorderPoint={product.reorderPoint} tracked={product.trackInventory} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </Page>
   );
 }
 

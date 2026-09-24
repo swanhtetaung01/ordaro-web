@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Alert, Button, Field, linkClasses } from "@/components/ui";
 import { Link, useRouter } from "@/i18n/navigation";
 
 type AuthPayload = {
@@ -40,7 +41,7 @@ export function LoginForm() {
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-6"
       onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
@@ -60,20 +61,20 @@ export function LoginForm() {
         }
       }}
     >
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      <Field label={t("phone")} hint={t("phoneHint")} name="phone" type="tel" autoComplete="tel" required />
-      <Field label={t("password")} name="password" type="password" autoComplete="current-password" required />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <button
-        className="rounded-button bg-indigo px-4 py-3 font-medium text-white disabled:opacity-60"
-        disabled={pending}
-        type="submit"
-      >
+      <h1 className="text-2xl font-bold tracking-tight text-ink">{t("title")}</h1>
+      <div className="flex flex-col gap-4">
+        <Field autoComplete="tel" hint={t("phoneHint")} label={t("phone")} name="phone" required type="tel" />
+        <Field autoComplete="current-password" label={t("password")} name="password" required type="password" />
+      </div>
+      {error ? <Alert>{error}</Alert> : null}
+      <Button busy={pending} className="w-full" size="lg" type="submit">
         {pending ? t("submitting") : t("submit")}
-      </button>
-      <Link className="text-center text-sm text-teal" href="/signup">
-        {t("signup")}
-      </Link>
+      </Button>
+      <p className="text-center text-sm">
+        <Link className={linkClasses} href="/signup">
+          {t("signup")}
+        </Link>
+      </p>
     </form>
   );
 }
@@ -87,7 +88,7 @@ export function SignupForm() {
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-6"
       onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
@@ -110,48 +111,31 @@ export function SignupForm() {
         }
       }}
     >
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      <Field label={t("fullName")} name="fullName" autoComplete="name" required />
-      <Field label={t("businessName")} name="businessName" required />
-      <Field label={t("phone")} hint={t("phoneHint")} name="phone" type="tel" autoComplete="tel" required />
-      <Field
-        label={t("password")}
-        hint={t("passwordHint")}
-        name="password"
-        type="password"
-        autoComplete="new-password"
-        minLength={8}
-        required
-      />
-      <Field label={t("code")} hint={t("codeHint")} name="signupCode" autoComplete="off" />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <button
-        className="rounded-button bg-indigo px-4 py-3 font-medium text-white disabled:opacity-60"
-        disabled={pending}
-        type="submit"
-      >
+      <h1 className="text-2xl font-bold tracking-tight text-ink">{t("title")}</h1>
+      <div className="flex flex-col gap-4">
+        <Field autoComplete="name" label={t("fullName")} name="fullName" required />
+        <Field label={t("businessName")} name="businessName" required />
+        <Field autoComplete="tel" hint={t("phoneHint")} label={t("phone")} name="phone" required type="tel" />
+        <Field
+          autoComplete="new-password"
+          hint={t("passwordHint")}
+          label={t("password")}
+          minLength={8}
+          name="password"
+          required
+          type="password"
+        />
+        <Field autoComplete="off" hint={t("codeHint")} label={t("code")} name="signupCode" />
+      </div>
+      {error ? <Alert>{error}</Alert> : null}
+      <Button busy={pending} className="w-full" size="lg" type="submit">
         {pending ? t("submitting") : t("submit")}
-      </button>
-      <Link className="text-center text-sm text-teal" href="/login">
-        {t("login")}
-      </Link>
+      </Button>
+      <p className="text-center text-sm">
+        <Link className={linkClasses} href="/login">
+          {t("login")}
+        </Link>
+      </p>
     </form>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  ...input
-}: { label: string; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      <input
-        className="rounded-control border border-line px-3 py-2 text-base text-ink outline-none focus:border-indigo"
-        {...input}
-      />
-      {hint ? <span className="text-ink/60">{hint}</span> : null}
-    </label>
   );
 }

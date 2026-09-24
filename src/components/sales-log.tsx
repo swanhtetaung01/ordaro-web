@@ -3,9 +3,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Badge, Button, Field, PageHeader, Panel, SelectField } from "@/components/ui";
+import { PlusIcon, ReceiptIcon } from "@/components/icons";
+import {
+  Alert,
+  Badge,
+  Button,
+  ButtonLink,
+  EmptyState,
+  Field,
+  insetFocusRing,
+  LoadingRows,
+  Page,
+  PageHeader,
+  Panel,
+  SelectField,
+} from "@/components/ui";
 import { Link } from "@/i18n/navigation";
 import type { Schemas } from "@/lib/backend";
+import { useCodes } from "@/lib/codes";
 import { formatAmount } from "@/lib/money";
 import { messageFor, readJson } from "@/lib/read-json";
 
@@ -17,13 +32,16 @@ const parked = ["HELD", "DRAFT"];
 /** The sales log (completed sales, newest first) or, with {@code held}, the parked carts. */
 export function SalesLog({ held = false }: { held?: boolean }) {
   const t = useTranslations("salesLog");
+  const shell = useTranslations("shell");
   const errors = useTranslations("errors");
+  const codes = useCodes();
   const [rows, setRows] = useState<Row[]>([]);
   const [show, setShow] = useState<"done" | "all">("done");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [error, setError] = useState<string>();
   const [loaded, setLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
     const search = new URLSearchParams();
@@ -51,54 +69,77 @@ export function SalesLog({ held = false }: { held?: boolean }) {
     void load();
   }, [load]);
 
+  const newSale = (variant: "primary" | "secondary") => (
+    <ButtonLink href="/sales/new" variant={variant}>
+      <PlusIcon className="size-5" />
+      {shell("newSale")}
+    </ButtonLink>
+  );
+
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
-      <PageHeader title={held ? t("heldTitle") : t("title")} subtitle={held ? t("heldSubtitle") : t("subtitle")} />
+    <Page>
+      <PageHeader
+        actions={newSale("primary")}
+        subtitle={held ? t("heldSubtitle") : t("subtitle")}
+        title={held ? t("heldTitle") : t("title")}
+      />
       {held ? null : (
         <Panel>
           <form
-            className="grid gap-3 sm:grid-cols-4"
+            className="grid grid-cols-2 gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end"
             onSubmit={(event) => {
               event.preventDefault();
-              void load();
+              setRefreshing(true);
+              void load().finally(() => setRefreshing(false));
             }}
           >
-            <SelectField label={t("show")} onChange={(event) => setShow(event.target.value as typeof show)} value={show}>
+            <SelectField className="col-span-2 lg:col-span-1" label={t("show")} onChange={(event) => setShow(event.target.value as typeof show)} value={show}>
               <option value="done">{t("showDone")}</option>
               <option value="all">{t("showAll")}</option>
             </SelectField>
             <Field label={t("from")} onChange={(event) => setFrom(event.target.value)} type="date" value={from} />
             <Field label={t("to")} onChange={(event) => setTo(event.target.value)} type="date" value={to} />
-            <Button className="self-end" type="submit" variant="secondary">{t("refresh")}</Button>
+            <Button busy={refreshing} className="col-span-2 lg:col-span-1" type="submit" variant="secondary">{t("refresh")}</Button>
           </form>
           <p className="mt-2 text-xs text-slate">{t("rangeHint")}</p>
         </Panel>
       )}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {loaded && rows.length === 0 && !error ? <p className="text-sm text-slate">{held ? t("noHeld") : t("none")}</p> : null}
-      <ul className="flex flex-col gap-2">
-        {rows.map((row) => (
-          <li key={row.id}>
-            <Link
-              className="flex flex-wrap items-center justify-between gap-2 rounded-panel border border-line bg-white px-4 py-3 text-sm hover:border-indigo"
-              href={`/sales/${row.id}`}
-            >
-              <span className="flex flex-col">
-                <span className="font-semibold">{row.receiptNumber ?? t("parked")}</span>
-                <span className="text-xs text-slate">
-                  {new Date((row.soldAt ?? row.createdAt) as string).toLocaleString()} · {row.customerName ?? t("walkIn")}
+      {error ? <Alert>{error}</Alert> : null}
+      {!loaded ? (
+        <LoadingRows rows={6} />
+      ) : rows.length === 0 ? (
+        error ? null : (
+          <EmptyState action={newSale("secondary")} icon={<ReceiptIcon className="size-6" />} title={held ? t("noHeld") : t("none")} />
+        )
+      ) : (
+        <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-panel border border-line bg-white shadow-xs">
+          {rows.map((row) => (
+            <li key={row.id}>
+              <Link
+                className={`flex items-center justify-between gap-4 px-4 py-4 transition-colors hover:bg-slate-50 motion-reduce:transition-none ${insetFocusRing}`}
+                href={`/sales/${row.id}`}
+              >
+                <span className="flex min-w-0 flex-col gap-2">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-ink">{row.receiptNumber ?? t("parked")}</span>
+                    <Badge tone={row.channel === "ONLINE" ? "info" : "muted"}>{codes("channel", row.channel)}</Badge>
+                    {row.status !== "COMPLETED" ? (
+                      <Badge tone={row.status === "HELD" || row.status === "DRAFT" ? "warn" : row.status === "VOID" ? "bad" : "muted"}>
+                        {codes("saleStatus", row.status)}
+                      </Badge>
+                    ) : null}
+                  </span>
+                  <span className="text-xs text-slate">
+                    {new Date((row.soldAt ?? row.createdAt) as string).toLocaleString()} · {row.customerName ?? t("walkIn")} ·{" "}
+                    {t("items", { count: row.lineCount ?? 0 })}
+                  </span>
                 </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <Badge tone={row.channel === "ONLINE" ? "ok" : "muted"}>{row.channel === "ONLINE" ? t("online") : t("inShop")}</Badge>
-                {row.status !== "COMPLETED" ? <Badge tone={row.status === "HELD" || row.status === "DRAFT" ? "warn" : "muted"}>{row.status}</Badge> : null}
-                <span className="text-xs text-slate">{t("items", { count: row.lineCount ?? 0 })}</span>
-                <span className="font-mono font-semibold">{formatAmount(row.total)}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+                <span className="shrink-0 text-right text-base font-semibold text-ink tabular-nums">{formatAmount(row.total)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Page>
   );
 }
