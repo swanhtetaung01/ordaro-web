@@ -151,7 +151,7 @@ export function ExpenseDesk() {
               <option key={row.id} value={row.id}>{row.name}</option>
             ))}
           </SelectField>
-          <Field label={t("amount")} onChange={(event) => setAmount(event.target.value)} required value={amount} />
+          <Field inputMode="decimal" label={t("amount")} onChange={(event) => setAmount(event.target.value)} required value={amount} />
           <SelectField label={t("method")} onChange={(event) => setMethod(event.target.value as Method)} value={method}>
             {methods.map((value) => (
               <option key={value} value={value}>{value}</option>

@@ -116,8 +116,8 @@ export function StockDesk() {
               <option key={row.id} value={row.id}>{row.name}</option>
             ))}
           </SelectField>
-          <Field label={t("quantity")} onChange={(event) => setQuantity(event.target.value)} required value={quantity} />
-          <Field label={t("unitCost")} onChange={(event) => setUnitCost(event.target.value)} value={unitCost} />
+          <Field inputMode="decimal" label={t("quantity")} onChange={(event) => setQuantity(event.target.value)} required value={quantity} />
+          <Field inputMode="decimal" label={t("unitCost")} onChange={(event) => setUnitCost(event.target.value)} value={unitCost} />
           <Button disabled={!quantity || !locationId || !productId} type="submit">{t("postNow")}</Button>
         </form>
       </Panel>

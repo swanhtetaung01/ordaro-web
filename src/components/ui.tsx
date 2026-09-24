@@ -1,29 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Link, usePathname } from "@/i18n/navigation";
+import {
+  AlertIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  CloseIcon,
+  InfoIcon,
+  LogoutIcon,
+  MenuIcon,
+  SearchIcon,
+  Spinner,
+} from "@/components/icons";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
-const nav = [
-  { href: "/dashboard", key: "dashboard" },
-  { href: "/sales/new", key: "newSale" },
-  { href: "/sales", key: "salesLog" },
-  { href: "/sales/held", key: "heldSales" },
-  { href: "/products", key: "products" },
-  { href: "/stock", key: "stock" },
-  { href: "/customers", key: "customers" },
-  { href: "/receivables", key: "receivables" },
-  { href: "/payables", key: "payables" },
-  { href: "/expenses", key: "expenses" },
-  { href: "/categories", key: "categories" },
-  { href: "/suppliers", key: "suppliers" },
-  { href: "/locations", key: "locations" },
-  { href: "/staff", key: "staff" },
-  { href: "/registers", key: "registers" },
-  { href: "/settings", key: "settings" },
-  { href: "/account", key: "account" },
-] as const;
+type NavItem = { href: string; key: string };
+
+const home: NavItem = { href: "/dashboard", key: "dashboard" };
+
+/** The menu in four groups, in the order a shop's day runs. */
+const groups: { key: string; items: NavItem[] }[] = [
+  {
+    key: "groupSell",
+    items: [
+      { href: "/sales/new", key: "newSale" },
+      { href: "/sales", key: "salesLog" },
+      { href: "/sales/held", key: "heldSales" },
+      { href: "/customers", key: "customers" },
+    ],
+  },
+  {
+    key: "groupStock",
+    items: [
+      { href: "/products", key: "products" },
+      { href: "/stock", key: "stock" },
+      { href: "/categories", key: "categories" },
+      { href: "/suppliers", key: "suppliers" },
+    ],
+  },
+  {
+    key: "groupMoney",
+    items: [
+      { href: "/receivables", key: "receivables" },
+      { href: "/payables", key: "payables" },
+      { href: "/expenses", key: "expenses" },
+    ],
+  },
+  {
+    key: "groupSetup",
+    items: [
+      { href: "/locations", key: "locations" },
+      { href: "/staff", key: "staff" },
+      { href: "/registers", key: "registers" },
+      { href: "/settings", key: "settings" },
+      { href: "/account", key: "account" },
+    ],
+  },
+];
+
+const nav = [home, ...groups.flatMap((group) => group.items)];
 
 /** The most specific item wins, so /sales/held does not also light up /sales. */
 function activeHref(pathname: string) {
@@ -32,6 +70,17 @@ function activeHref(pathname: string) {
     .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((a, b) => b.length - a.length)[0];
 }
+
+/** The keyboard focus ring every control shares; a mouse or a finger never leaves it behind. */
+export const focusRing =
+  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2";
+
+/** An inline link inside a sentence or under a form. */
+export const linkClasses = `rounded-sm font-semibold text-teal underline-offset-4 hover:underline ${focusRing}`;
+
+const iconButton = `inline-flex size-12 shrink-0 items-center justify-center rounded-button text-slate transition hover:bg-slate-100 hover:text-ink motion-reduce:transition-none ${focusRing}`;
+
+const menuRow = `flex min-h-12 w-full items-center gap-2 rounded-button px-4 text-sm transition-colors motion-reduce:transition-none md:min-h-10 ${focusRing}`;
 
 export function Shell({
   children,
@@ -45,49 +94,207 @@ export function Shell({
   const t = useTranslations("shell");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const drawer = useRef<HTMLDialogElement>(null);
   const active = activeHref(pathname);
   const current = nav.find((item) => item.href === active);
+
+  // on a phone the menu is a modal <dialog>: focus stays inside, Esc closes it, the page behind is inert
+  useEffect(() => {
+    const dialog = drawer.current;
+    if (open && dialog && !dialog.open) {
+      dialog.showModal();
+    }
+    if (!open && dialog?.open) {
+      dialog.close();
+    }
+  }, [open]);
+
+  // turned sideways past the breakpoint, the sidebar takes over: never leave a hidden modal open
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 48rem)");
+    const close = () => {
+      if (wide.matches) {
+        setOpen(false);
+      }
+    };
+    wide.addEventListener("change", close);
+    return () => wide.removeEventListener("change", close);
+  }, []);
+
   return (
-    <div className="flex min-h-dvh flex-col bg-surface text-ink md:flex-row">
-      <aside className="flex w-full shrink-0 flex-col gap-3 border-b border-line bg-white px-4 py-3 md:w-60 md:border-r md:border-b-0 md:py-5">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-8 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white">
-            O
-          </span>
-          <span className="flex-1">
-            <span className="block text-base font-extrabold">{t("product")}</span>
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate">{organizationName}</span>
-          </span>
-          {/* on a phone the menu folds away; the page gets the screen */}
-          <button
-            aria-expanded={open}
-            className="rounded-button border border-line px-3 py-2 text-sm font-semibold md:hidden"
-            onClick={() => setOpen((value) => !value)}
-            type="button"
-          >
-            {open ? t("close") : current ? t(current.key) : t("menu")}
-          </button>
+    <div className="min-h-dvh bg-surface text-ink md:flex">
+      <a
+        className={`sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-button focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg ${focusRing}`}
+        href="#main"
+      >
+        {t("skipToContent")}
+      </a>
+
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-white/95 px-4 backdrop-blur md:hidden">
+        <Brand organizationName={organizationName} />
+        <button
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          className={buttonClasses("secondary", "max-w-[55%]")}
+          onClick={() => setOpen(true)}
+          type="button"
+        >
+          <MenuIcon className="size-5 shrink-0" />
+          <span className="truncate">{current ? t(current.key) : t("menu")}</span>
+        </button>
+      </header>
+
+      <dialog
+        aria-label={t("menu")}
+        className="m-0 h-dvh max-h-none w-80 max-w-[85vw] border-0 bg-transparent p-0 text-ink backdrop:bg-[rgb(15_23_42/0.45)] md:hidden"
+        onClick={(event) => {
+          // a tap on the dimmed page beside the menu closes it
+          if (event.target === event.currentTarget) {
+            setOpen(false);
+          }
+        }}
+        onClose={() => setOpen(false)}
+        ref={drawer}
+      >
+        <div className="flex h-full flex-col bg-white shadow-xl">
+          <div className="flex h-16 shrink-0 items-center gap-2 border-b border-line px-4">
+            <Brand organizationName={organizationName} />
+            <button aria-label={t("close")} className={iconButton} onClick={() => setOpen(false)} type="button">
+              <CloseIcon />
+            </button>
+          </div>
+          <Navigation active={active} onNavigate={() => setOpen(false)} />
+          <AccountBox userName={userName} />
         </div>
-        <nav className={`${open ? "flex" : "hidden"} flex-1 flex-col gap-1 md:flex`}>
-          {nav.map((item) => (
-            <Link
-              key={item.key}
-              className={`rounded-button px-2.5 py-2.5 text-sm font-medium ${
-                item.href === active ? "bg-indigo/10 text-indigo" : "text-slate hover:bg-indigo/5 hover:text-indigo"
-              }`}
-              href={item.href}
-              onClick={() => setOpen(false)}
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-        </nav>
-        <p className={`${open ? "block" : "hidden"} border-t border-line pt-3 text-sm md:block`}>
-          <span className="block font-semibold">{userName}</span>
-          <span className="text-xs text-slate">{organizationName}</span>
-        </p>
+      </dialog>
+
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-white">
+        <div className="flex h-16 shrink-0 items-center px-4">
+          <Brand organizationName={organizationName} />
+        </div>
+        <Navigation active={active} />
+        <AccountBox userName={userName} />
       </aside>
-      <div className="min-w-0 flex-1">{children}</div>
+
+      <main className="min-w-0 flex-1 focus:outline-hidden" id="main" tabIndex={-1}>
+        {children}
+      </main>
+    </div>
+  );
+}
+
+function Brand({ organizationName }: { organizationName: string }) {
+  const t = useTranslations("shell");
+  return (
+    <Link className={`flex min-w-0 flex-1 items-center gap-2 rounded-button ${focusRing}`} href="/dashboard">
+      <span
+        aria-hidden="true"
+        className="flex size-8 shrink-0 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white"
+      >
+        O
+      </span>
+      <span className="min-w-0">
+        <span className="block text-base leading-tight font-bold text-ink">{t("product")}</span>
+        <span className="block truncate text-xs text-slate">{organizationName}</span>
+      </span>
+    </Link>
+  );
+}
+
+function Navigation({ active, onNavigate }: { active?: string; onNavigate?: () => void }) {
+  const t = useTranslations("shell");
+  const id = useId();
+
+  function link(item: NavItem) {
+    const current = item.href === active;
+    return (
+      <li key={item.href}>
+        <Link
+          aria-current={current ? "page" : undefined}
+          className={`${menuRow} ${
+            current ? "bg-indigo/10 font-semibold text-indigo" : "font-medium text-slate hover:bg-slate-100 hover:text-ink"
+          }`}
+          href={item.href}
+          onClick={onNavigate}
+        >
+          {t(item.key)}
+        </Link>
+      </li>
+    );
+  }
+
+  return (
+    <nav aria-label={t("menu")} className="flex-1 overflow-y-auto px-2 pb-4">
+      <ul>{link(home)}</ul>
+      {groups.map((group) => (
+        <div className="mt-4" key={group.key}>
+          <p className="px-4 pb-2 text-xs font-semibold text-slate" id={`${id}-${group.key}`}>
+            {t(group.key)}
+          </p>
+          <ul aria-labelledby={`${id}-${group.key}`}>{group.items.map((item) => link(item))}</ul>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function AccountBox({ userName }: { userName: string }) {
+  const t = useTranslations("shell");
+  return (
+    <div className="flex shrink-0 flex-col gap-2 border-t border-line p-4">
+      <p className="truncate text-sm font-semibold text-ink">{userName}</p>
+      <LanguageSwitcher fullWidth />
+      <SignOut label={t("signOut")} pendingLabel={t("signingOut")} />
+    </div>
+  );
+}
+
+/** Signs out on this phone or browser, then goes to the sign-in page. */
+export function SignOut({
+  label,
+  pendingLabel,
+  className = `${menuRow} font-medium text-slate hover:bg-slate-100 hover:text-ink disabled:opacity-60`,
+}: {
+  label: string;
+  pendingLabel?: string;
+  className?: string;
+}) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  return (
+    <button
+      className={className}
+      disabled={pending}
+      onClick={async () => {
+        setPending(true);
+        await fetch("/api/auth/logout", { method: "POST" });
+        router.replace("/login");
+      }}
+      type="button"
+    >
+      {pending ? <Spinner className="size-5" /> : <LogoutIcon className="size-5" />}
+      {pending && pendingLabel ? pendingLabel : label}
+    </button>
+  );
+}
+
+/** One page's column: the same gutters and the same space between sections everywhere. */
+export function Page({
+  children,
+  width = "wide",
+  className = "",
+}: {
+  children: React.ReactNode;
+  width?: "wide" | "narrow";
+  className?: string;
+}) {
+  return (
+    <div
+      className={`mx-auto flex w-full flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8 ${
+        width === "narrow" ? "max-w-3xl" : "max-w-7xl"
+      } ${className}`}
+    >
+      {children}
     </div>
   );
 }
@@ -98,91 +305,327 @@ export function PageHeader({
   actions,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-slate">{subtitle}</p> : null}
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-2">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{title}</h1>
+        {subtitle ? <div className="text-sm text-slate">{subtitle}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
-    </div>
+    </header>
   );
+}
+
+type Variant = "primary" | "secondary" | "danger" | "dangerSolid" | "ghost";
+
+const variants: Record<Variant, string> = {
+  primary: "bg-indigo text-white shadow-xs not-disabled:hover:bg-indigo-700 not-disabled:active:bg-indigo-800",
+  secondary:
+    "border border-line bg-white text-ink shadow-xs not-disabled:hover:border-slate-300 not-disabled:hover:bg-slate-50 not-disabled:active:bg-slate-100",
+  danger:
+    "border border-red-200 bg-white text-danger not-disabled:hover:border-red-300 not-disabled:hover:bg-red-50 not-disabled:active:bg-red-100",
+  dangerSolid: "bg-danger text-white shadow-xs not-disabled:hover:bg-red-700 not-disabled:active:bg-red-800",
+  ghost: "text-teal not-disabled:hover:bg-teal-50 not-disabled:active:bg-teal-100",
+};
+
+/** Classes for anything that looks like a button: a button, or a link that goes somewhere. */
+export function buttonClasses(variant: Variant = "primary", className = "") {
+  return `inline-flex min-h-12 select-none items-center justify-center gap-2 rounded-button px-4 py-2 text-center text-sm font-semibold transition motion-reduce:transition-none not-disabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-10 ${focusRing} ${variants[variant]} ${className}`;
 }
 
 export function Button({
   variant = "primary",
+  busy = false,
   className = "",
+  disabled,
+  children,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" }) {
-  const styles = {
-    primary: "bg-indigo text-white",
-    secondary: "border border-line bg-white text-ink",
-    danger: "border border-danger text-danger",
-    ghost: "text-teal",
-  }[variant];
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; busy?: boolean }) {
   return (
     <button
-      className={`rounded-button px-4 py-2.5 text-sm font-semibold disabled:opacity-50 ${styles} ${className}`}
+      aria-busy={busy || undefined}
+      className={buttonClasses(variant, className)}
+      disabled={disabled || busy}
       {...props}
-    />
+    >
+      {busy ? <Spinner /> : null}
+      {children}
+    </button>
   );
 }
+
+/** A link that looks like a button: "New sale", "Add product". */
+export function ButtonLink({
+  variant = "primary",
+  className = "",
+  ...props
+}: React.ComponentProps<typeof Link> & { variant?: Variant }) {
+  return <Link className={buttonClasses(variant, className)} {...props} />;
+}
+
+const control =
+  "min-h-12 w-full rounded-control border border-line bg-white px-4 py-2 text-base text-ink tabular-nums shadow-xs transition placeholder:text-slate/70 hover:border-slate-300 focus:border-indigo focus:outline-hidden focus:ring-2 focus:ring-indigo/25 disabled:cursor-not-allowed disabled:border-line disabled:bg-surface disabled:text-slate user-invalid:border-danger motion-reduce:transition-none sm:min-h-10 sm:text-sm";
+
+const labelText = "font-medium text-ink";
 
 export function Field({
   label,
   hint,
+  hideLabel = false,
+  className = "",
   ...input
-}: { label: string; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; hint?: string; hideLabel?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const hintId = useId();
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      <input
-        className="rounded-control border border-line bg-white px-3 py-2 font-mono text-sm outline-none focus:border-indigo disabled:bg-surface"
-        {...input}
-      />
-      {hint ? <span className="text-xs text-slate">{hint}</span> : null}
+    <label className={`flex min-w-0 flex-col gap-2 text-sm ${className}`}>
+      <span className={hideLabel ? "sr-only" : labelText}>{label}</span>
+      <input aria-describedby={hint ? hintId : undefined} className={control} {...input} />
+      {hint ? (
+        <span className="text-xs text-slate" id={hintId}>
+          {hint}
+        </span>
+      ) : null}
+    </label>
+  );
+}
+
+/** A search box: the label is read aloud and shown as the placeholder. */
+export function SearchField({
+  label,
+  className = "",
+  ...input
+}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className={`relative block min-w-0 ${className}`}>
+      <span className="sr-only">{label}</span>
+      <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate" />
+      <input className={`${control} pl-12`} placeholder={label} type="search" {...input} />
     </label>
   );
 }
 
 export function SelectField({
   label,
+  hideLabel = false,
+  className = "",
   children,
   ...select
-}: { label: string; children: React.ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+}: { label: string; hideLabel?: boolean; children: React.ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      <select
-        className="rounded-control border border-line bg-white px-3 py-2 text-sm outline-none focus:border-indigo disabled:bg-surface"
-        {...select}
-      >
-        {children}
-      </select>
+    <label className={`flex min-w-0 flex-col gap-2 text-sm ${className}`}>
+      <span className={hideLabel ? "sr-only" : labelText}>{label}</span>
+      <span className="relative block">
+        <select className={`${control} cursor-pointer appearance-none pr-12`} {...select}>
+          {children}
+        </select>
+        <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-slate" />
+      </span>
     </label>
   );
 }
 
-export function Panel({ title, children }: { title?: string; children: React.ReactNode }) {
+/** A checkbox on a full-width row, so the whole row is the tap target. */
+export function Checkbox({
+  label,
+  hint,
+  className = "",
+  ...input
+}: { label: string; hint?: string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "type">) {
   return (
-    <section className="rounded-panel border border-line bg-white p-5">
-      {title ? <h2 className="mb-4 text-base font-bold">{title}</h2> : null}
+    <label
+      className={`-mx-2 flex min-h-12 cursor-pointer items-center gap-2 rounded-button px-2 text-sm text-ink transition-colors hover:bg-slate-50 has-disabled:cursor-not-allowed has-disabled:opacity-60 motion-reduce:transition-none sm:min-h-10 ${className}`}
+    >
+      <input className={`size-5 shrink-0 cursor-pointer accent-indigo ${focusRing}`} type="checkbox" {...input} />
+      <span className="min-w-0">
+        {label}
+        {hint ? <span className="block text-xs text-slate">{hint}</span> : null}
+      </span>
+    </label>
+  );
+}
+
+export function Panel({
+  title,
+  actions,
+  className = "",
+  id,
+  children,
+}: {
+  title?: string;
+  actions?: React.ReactNode;
+  className?: string;
+  id?: string;
+  children: React.ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <section
+      aria-labelledby={title ? titleId : undefined}
+      className={`rounded-panel border border-line bg-white p-4 shadow-xs sm:p-6 ${className}`}
+      id={id}
+    >
+      {title || actions ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          {title ? (
+            <h2 className="text-base font-semibold text-ink" id={titleId}>
+              {title}
+            </h2>
+          ) : null}
+          {actions}
+        </div>
+      ) : null}
       {children}
     </section>
   );
 }
 
-export function Badge({ tone, children }: { tone: "ok" | "warn" | "bad" | "muted"; children: React.ReactNode }) {
+export function Badge({
+  tone,
+  children,
+}: {
+  tone: "ok" | "warn" | "bad" | "muted" | "info";
+  children: React.ReactNode;
+}) {
   const styles = {
-    ok: "bg-emerald-50 text-emerald-800",
-    warn: "bg-amber-50 text-amber-800",
-    bad: "text-danger",
-    muted: "bg-surface text-slate",
+    ok: "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
+    warn: "bg-amber-50 text-amber-800 ring-amber-600/25",
+    bad: "bg-red-50 text-red-700 ring-red-600/20",
+    muted: "bg-slate-100 text-slate-700 ring-slate-500/20",
+    info: "bg-indigo-50 text-indigo-700 ring-indigo-600/20",
   }[tone];
-  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${styles}`}>{children}</span>;
+  return (
+    <span
+      className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold whitespace-nowrap ring-1 ring-inset ${styles}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** A message about what just happened: errors are read out at once, the rest when there is a pause. */
+export function Alert({ tone = "error", children }: { tone?: "error" | "success" | "info"; children: React.ReactNode }) {
+  const styles = {
+    error: "border-red-200 bg-red-50 text-red-800",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    info: "border-indigo-100 bg-indigo-50 text-indigo-950",
+  }[tone];
+  const Icon = tone === "error" ? AlertIcon : tone === "success" ? CheckCircleIcon : InfoIcon;
+  return (
+    <div
+      className={`flex items-start gap-2 rounded-button border px-4 py-2 text-sm ${styles}`}
+      role={tone === "error" ? "alert" : "status"}
+    >
+      <Icon className="mt-0.5 size-4 shrink-0" />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+/** What an empty list says, with the one thing to do next. */
+export function EmptyState({
+  icon,
+  title,
+  hint,
+  action,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  hint?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-panel border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+      {icon ? (
+        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate">{icon}</div>
+      ) : null}
+      <p className="text-base font-semibold text-ink">{title}</p>
+      {hint ? <p className="max-w-md text-sm text-slate">{hint}</p> : null}
+      {action ? <div className="mt-4 flex flex-wrap justify-center gap-2">{action}</div> : null}
+    </div>
+  );
+}
+
+/** A grey shape where content is about to appear. Callers give it a size and corners. */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div aria-hidden="true" className={`animate-pulse bg-slate-200/70 motion-reduce:animate-none ${className}`} />;
+}
+
+/** Placeholder rows for a list that is loading. */
+export function LoadingRows({ rows = 5, className = "h-16" }: { rows?: number; className?: string }) {
+  const t = useTranslations("common");
+  return (
+    <div className="flex flex-col gap-2" role="status">
+      <span className="sr-only">{t("loading")}</span>
+      {Array.from({ length: rows }, (_, index) => (
+        <Skeleton className={`w-full rounded-panel ${className}`} key={index} />
+      ))}
+    </div>
+  );
+}
+
+/** A whole page that is loading: a title and a few panels. */
+export function PageLoading({ panels = 2 }: { panels?: number }) {
+  const t = useTranslations("common");
+  return (
+    <Page>
+      <div className="flex flex-col gap-2" role="status">
+        <span className="sr-only">{t("loading")}</span>
+        <Skeleton className="h-8 w-48 max-w-full rounded-button" />
+        <Skeleton className="h-4 w-72 max-w-full rounded-button" />
+      </div>
+      {Array.from({ length: panels }, (_, index) => (
+        <Skeleton className="h-48 w-full rounded-panel" key={index} />
+      ))}
+    </Page>
+  );
+}
+
+/**
+ * A destructive button that asks first. The first tap only asks; the question offers Cancel,
+ * which has the focus, and the red button that does it.
+ */
+export function ConfirmButton({
+  label,
+  question,
+  confirmLabel,
+  onConfirm,
+  busy = false,
+}: {
+  label: string;
+  question: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+  busy?: boolean;
+}) {
+  const t = useTranslations("common");
+  const [asking, setAsking] = useState(false);
+  if (!asking) {
+    return (
+      <Button onClick={() => setAsking(true)} type="button" variant="danger">
+        {label}
+      </Button>
+    );
+  }
+  return (
+    <div
+      aria-label={question}
+      className="flex flex-col gap-4 rounded-button border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center"
+      role="group"
+    >
+      <p className="flex-1 text-sm font-medium text-red-800">{question}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button autoFocus onClick={() => setAsking(false)} type="button" variant="secondary">
+          {t("cancel")}
+        </Button>
+        <Button busy={busy} onClick={onConfirm} type="button" variant="dangerSolid">
+          {confirmLabel}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function Soon({ children }: { children: React.ReactNode }) {

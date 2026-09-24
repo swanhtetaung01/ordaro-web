@@ -3,10 +3,12 @@
 :root {
   --ink: #0f172a;
   --indigo: #4f46e5;
-  --teal: #0d9488;
+  /* teal and red one shade darker than the first design: at #0d9488 and #ef4444 small text on
+     white was 3.7:1, under the 4.5:1 that WCAG AA asks for */
+  --teal: #0f766e;
   --surface: #f8fafc;
   --line: #e2e8f0;
-  --danger: #ef4444;
+  --danger: #dc2626;
   --slate: #475569;
 }
 
@@ -18,10 +20,11 @@
   --color-line: var(--line);
   --color-slate: var(--slate);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Burmese in an English screen (a product name, a customer) still gets the Myanmar font */
+  --font-sans: var(--font-geist-sans), var(--font-noto-myanmar), sans-serif;
+  --font-mono: var(--font-geist-mono), var(--font-noto-myanmar), ui-monospace, monospace;
   --font-myanmar: var(--font-noto-myanmar), var(--font-geist-sans), sans-serif;
-  --radius-control: 4px;
+  --radius-control: 8px;
   --radius-button: 8px;
   --radius-panel: 16px;
 }
@@ -32,4 +35,33 @@ body {
 
 html[lang="my"] body {
   font-family: var(--font-myanmar);
+}
+
+/* Burmese stacks marks above and below its letters: every text size gets taller lines, and
+   letter-spacing, which only pulls those clusters apart, is switched off. */
+html[lang="my"] {
+  line-height: 1.8;
+  --text-xs--line-height: 1.8;
+  --text-sm--line-height: 1.8;
+  --text-base--line-height: 1.75;
+  --text-lg--line-height: 1.7;
+  --text-xl--line-height: 1.6;
+  --text-2xl--line-height: 1.5;
+  --text-3xl--line-height: 1.45;
+}
+
+html[lang="my"] * {
+  letter-spacing: normal;
+}
+
+@layer base {
+  /* a visible focus mark on anything a keyboard can reach; components draw their own ring */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--indigo);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--indigo) 20%, transparent);
+  }
 }

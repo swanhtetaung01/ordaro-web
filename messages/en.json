@@ -42,7 +42,7 @@
   },
   "home": {
     "title": "You're signed in",
-    "next": "Product screens come next. Nothing here sells yet.",
+    "next": "Choose where to go next.",
     "products": "Products",
     "businesses": "Switch business",
     "logout": "Sign out",
@@ -115,11 +115,18 @@
     "dashboard": "Dashboard",
     "account": "Account",
     "menu": "Menu",
-    "close": "Close"
+    "close": "Close",
+    "groupSell": "Sell",
+    "groupStock": "Stock",
+    "groupMoney": "Money",
+    "groupSetup": "Setup",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…",
+    "skipToContent": "Skip to content"
   },
   "products": {
     "title": "Product catalog",
-    "subtitle": "Names, prices, barcodes, and stock from the ledger.",
+    "subtitle": "Your products, prices and stock.",
     "import": "Import catalog",
     "export": "Export",
     "add": "Add product",
@@ -143,12 +150,17 @@
     "notTracked": "Not tracked",
     "outOfStock": "Out of stock",
     "lowStock": "Low stock",
-    "inStock": "Active"
+    "inStock": "In stock",
+    "empty": "No products yet",
+    "emptyHint": "Add what you sell, with the stock you have now.",
+    "noMatch": "No products match",
+    "noMatchHint": "Try another word, or clear the filters.",
+    "count": "{count, plural, one {# product} other {# products}}"
   },
   "productForm": {
     "addTitle": "Add product",
     "editTitle": "Edit product",
-    "subtitle": "Prices and opening stock are written through the catalog API.",
+    "subtitle": "Name, prices and the stock you have now.",
     "basics": "Basic information",
     "name": "Product name",
     "sku": "SKU",
@@ -165,8 +177,8 @@
     "serviceHint": "Turn off inventory tracking instead",
     "prices": "Pricing",
     "cost": "Opening unit cost",
-    "openingCost": "Posted with opening stock",
-    "costLocked": "Cost lives on stock balances, not the product",
+    "openingCost": "What one unit of your opening stock cost you.",
+    "costLocked": "Cost now comes from the stock you receive.",
     "retail": "Retail price",
     "wholesale": "Wholesale price",
     "margin": "Estimated margin",
@@ -183,7 +195,10 @@
     "cancel": "Cancel",
     "archive": "Archive product",
     "save": "Save",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "options": "Where and how it sells",
+    "archiveQuestion": "Archive this product? It won't be sold any more; past sales keep it.",
+    "archiveConfirm": "Yes, archive it"
   },
   "productDetail": {
     "edit": "Edit",
@@ -311,7 +326,7 @@
     "store": "Store",
     "priceType": "Price",
     "customerPrice": "Customer default ({price})",
-    "priceFromCustomer": "No price is sent. The backend uses this customer's default price.",
+    "priceFromCustomer": "This customer's usual price is used.",
     "float": "Opening float",
     "openShift": "Open shift",
     "counted": "Counted cash",
@@ -328,7 +343,7 @@
     "qty": "Qty",
     "lineDiscount": "Line discount",
     "cartDiscount": "Cart discount",
-    "method": "Payment",
+    "method": "Method",
     "tendered": "Cash tendered",
     "amount": "Amount",
     "reference": "Reference",
@@ -343,17 +358,31 @@
     "outstanding": "Owes",
     "available": "Credit left",
     "addPayment": "Add another payment",
-    "changeOnReceipt": "Change is calculated by the server and shown on the receipt.",
+    "changeOnReceipt": "The change to give back is shown on the receipt.",
     "cardDisabled": "Card terminal",
     "exactDisabled": "Exact-amount and change preview",
     "modeStore": "In the shop",
     "modeOnline": "Online order",
-    "onlineHint": "Paid by KBZPay, WavePay or transfer: pick it and add the transaction number. Cash on delivery: choose or add the buyer and pay with CREDIT. It shows under Receivables until the courier pays you; record that payment there.",
+    "onlineHint": "Paid by KBZPay, WavePay or transfer: pick it and add the transaction number. Cash on delivery: choose or add the buyer and pay “On credit”. It shows under Receivables until the courier pays you; record that payment there.",
     "shipFrom": "Ship from",
     "newCustomer": "New customer",
     "newCustomerName": "Name",
     "newCustomerPhone": "Phone (optional)",
-    "addCustomer": "Add and select"
+    "addCustomer": "Add and select",
+    "paymentTitle": "Payment",
+    "shift": "Shift",
+    "shiftOpen": "Open",
+    "shiftClosed": "Closed",
+    "noMatch": "No product matches “{query}”.",
+    "noProducts": "No products to sell yet. Add them under Products.",
+    "noOnlineProducts": "No product is ticked “Sell online” yet.",
+    "moreResults": "Showing the first 20. Type to find the rest.",
+    "cartEmpty": "Tap a product to add it.",
+    "cartCount": "{count, plural, one {# item} other {# items}}",
+    "goToCart": "Cart and payment",
+    "removeLine": "Remove {name}",
+    "removePayment": "Remove this payment",
+    "noCustomers": "No customer found. Add them below."
   },
   "held": {
     "title": "Held sales",
@@ -381,10 +410,18 @@
     "online": "Online",
     "inShop": "In shop",
     "chargeCart": "Charge this cart",
-    "chargeHint": "Prices and costs are taken again now; the whole total is paid one way.",
+    "chargeHint": "Prices are checked again now, and the whole total is paid one way.",
     "payMethod": "Payment",
     "charge": "Charge {total}",
-    "voidCart": "Throw this cart away"
+    "voidCart": "Throw this cart away",
+    "items": "Items",
+    "subtotal": "Subtotal",
+    "discounts": "Discounts",
+    "taxIncluded": "Tax (included)",
+    "rounding": "Rounding",
+    "payments": "Payments",
+    "voidQuestion": "Throw this held cart away? This can't be undone.",
+    "voidConfirm": "Yes, throw it away"
   },
   "registers": {
     "title": "Registers",
@@ -543,5 +580,60 @@
     "mismatch": "The two new passwords are different.",
     "save": "Change password",
     "saved": "Password changed."
+  },
+  "common": {
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "clearFilters": "Clear filters"
+  },
+  "codes": {
+    "method": {
+      "CASH": "Cash",
+      "KBZ_PAY": "KBZPay",
+      "WAVE_PAY": "WavePay",
+      "AYA_PAY": "AYA Pay",
+      "CB_PAY": "CB Pay",
+      "BANK_TRANSFER": "Bank transfer",
+      "CREDIT": "On credit (pay later)",
+      "OTHER": "Other"
+    },
+    "saleStatus": {
+      "DRAFT": "Draft",
+      "HELD": "Held",
+      "COMPLETED": "Completed",
+      "VOID": "Voided",
+      "PARTIALLY_REFUNDED": "Partly refunded",
+      "REFUNDED": "Refunded"
+    },
+    "role": {
+      "OWNER": "Owner",
+      "STOCK_MANAGER": "Stock manager",
+      "CASHIER": "Cashier",
+      "PACKER": "Packer"
+    },
+    "memberStatus": {
+      "INVITED": "Invited",
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended",
+      "REMOVED": "Removed"
+    },
+    "unit": {
+      "PIECE": "Piece",
+      "BAG": "Bag",
+      "BOX": "Box",
+      "KG": "Kilogram",
+      "LITRE": "Litre",
+      "PACK": "Pack"
+    },
+    "priceType": {
+      "RETAIL": "Retail",
+      "WHOLESALE": "Wholesale"
+    },
+    "channel": {
+      "POS": "In shop",
+      "ONLINE": "Online",
+      "ORDER": "Order"
+    }
   }
 }

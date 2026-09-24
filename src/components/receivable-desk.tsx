@@ -159,7 +159,7 @@ export function ReceivableDesk() {
           </ul>
           {selected.status === "OPEN" || selected.status === "PARTIALLY_SETTLED" ? (
             <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={(event) => void repay(event)}>
-              <Field label={t("amount")} onChange={(event) => setAmount(event.target.value)} required value={amount} />
+              <Field inputMode="decimal" label={t("amount")} onChange={(event) => setAmount(event.target.value)} required value={amount} />
               <SelectField label={t("method")} onChange={(event) => setMethod(event.target.value as Method)} value={method}>
                 {methods.map((value) => (
                   <option key={value} value={value}>{value}</option>
@@ -231,7 +231,7 @@ export function ReceivableDesk() {
                 <option key={row.id} value={row.id}>{row.name}</option>
               ))}
             </SelectField>
-            <Field label={t("amount")} onChange={(event) => setManualAmount(event.target.value)} required value={manualAmount} />
+            <Field inputMode="decimal" label={t("amount")} onChange={(event) => setManualAmount(event.target.value)} required value={manualAmount} />
             <Field label={t("due")} onChange={(event) => setManualDue(event.target.value)} type="date" value={manualDue} />
             <Field label={t("note")} onChange={(event) => setManualNote(event.target.value)} value={manualNote} />
             <Button disabled={!manualCustomer || !locationId} type="submit">{t("create")}</Button>
