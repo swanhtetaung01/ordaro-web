@@ -1,6 +1,6 @@
 {
   "brand": {
-    "name": "Ordaro"
+    "name": "TrilloPOS"
   },
   "language": {
     "label": "ဘာသာစကား",
@@ -92,7 +92,7 @@
     "not_found": "မတွေ့ပါ။"
   },
   "shell": {
-    "product": "Ordaro",
+    "product": "TrilloPOS",
     "terminal": "စီမံခန့်ခွဲမှု",
     "newSale": "အရောင်းအသစ်",
     "heldSales": "ဆိုင်းထားသောအရောင်း",

@@ -217,7 +217,7 @@ function Brand({ organizationName }: { organizationName: string }) {
         aria-hidden="true"
         className="flex size-8 shrink-0 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white"
       >
-        O
+        T
       </span>
       <span className="min-w-0">
         <span className="block text-base leading-tight font-bold text-ink">{t("product")}</span>

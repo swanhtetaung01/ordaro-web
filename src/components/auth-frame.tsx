@@ -12,7 +12,7 @@ export async function AuthFrame({ children }: { children: React.ReactNode }) {
             aria-hidden="true"
             className="flex size-8 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white"
           >
-            O
+            T
           </span>
           {brand("name")}
         </p>
