@@ -1,6 +1,6 @@
 {
   "brand": {
-    "name": "Ordaro"
+    "name": "TrilloPOS"
   },
   "language": {
     "label": "Language",
@@ -92,7 +92,7 @@
     "not_found": "Not found."
   },
   "shell": {
-    "product": "Ordaro",
+    "product": "TrilloPOS",
     "terminal": "Admin",
     "newSale": "New sale",
     "heldSales": "Held sales",

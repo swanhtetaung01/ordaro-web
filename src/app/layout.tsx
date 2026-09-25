@@ -21,8 +21,8 @@ const myanmar = Noto_Sans_Myanmar({
 });
 
 export const metadata: Metadata = {
-  title: "Ordaro",
-  description: "Ordaro",
+  title: "TrilloPOS",
+  description: "TrilloPOS — sales, stock and money for your shop, by Trillotech",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
