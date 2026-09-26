@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { redirect as nextRedirect } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 
+import { ResumeSession } from "@/components/resume-session";
 import { Shell } from "@/components/shell";
-import { api, tokenKind, withAccess } from "@/lib/backend";
+import { api, hasSessionCookie, tokenKind, withAccess } from "@/lib/backend";
 import type { Membership, Schemas } from "@/lib/backend";
 
 export default async function ConsoleLayout({
@@ -17,7 +17,11 @@ export default async function ConsoleLayout({
   setRequestLocale(locale);
   const session = await withAccess((token) => api(token).GET("/auth/memberships"), { refresh: false });
   if (!session.response.ok) {
-    nextRedirect(`/api/auth/resume?locale=${locale}`);
+    if (!(await hasSessionCookie())) {
+      redirect({ href: "/login", locale });
+    }
+    // a Server Component cannot write cookies: the browser renews the session, then reloads this page
+    return <ResumeSession />;
   }
   const kind = tokenKind(await import("@/lib/backend").then((mod) => mod.accessToken()));
   if (kind === "PICKER") {

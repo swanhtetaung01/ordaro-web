@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
-
 import { api, clearTokens, withAccess } from "@/lib/backend";
 
-/** Refreshes the session where cookie writes are allowed, then sends the browser on. */
-export async function GET(request: Request) {
-  const locale = new URL(request.url).searchParams.get("locale") || "en";
+/**
+ * Renews an expired session where cookie writes are allowed. The console layout cannot write
+ * cookies, so its page asks here and reloads itself on 204, staying where the person was going.
+ * No redirect: behind the proxy, request.url is the container's own address, not the public one.
+ */
+export async function POST() {
   const session = await withAccess((token) => api(token).GET("/auth/memberships"));
-  if (!session.response.ok) {
-    await clearTokens();
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  if (session.response.ok) {
+    return new Response(null, { status: 204 });
   }
-  return NextResponse.redirect(new URL(`/${locale}/products`, request.url));
+  if (session.response.status === 401) {
+    await clearTokens();
+    return Response.json({ code: "unauthorized" }, { status: 401 });
+  }
+  return Response.json({ code: "network" }, { status: 503 });
 }

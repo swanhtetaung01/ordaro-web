@@ -730,7 +730,8 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "clearFilters": "Clear filters",
-    "close": "Close"
+    "close": "Close",
+    "retry": "Try again"
   },
   "codes": {
     "method": {
