@@ -6,10 +6,10 @@ Next.js App Router UI for TrilloPOS. The browser talks only to this app. Route h
 
 ```powershell
 corepack pnpm install
-corepack pnpm dev
+npm run dev
 ```
 
-The installed `pnpm.exe` on this machine is blocked by Device Guard. `corepack pnpm` is the command that works.
+Device Guard on this machine blocks the installed `pnpm.exe`, and at times the `pnpm-native.exe` behind `corepack pnpm` as well. Running scripts needs no pnpm: `npm run dev` runs the same `dev` script from the installed `node_modules`. Start the backend first (see its README); then open http://localhost:3000.
 
 Copy `.env.example` to `.env.local` if the API is not on `http://localhost:8080`.
 
