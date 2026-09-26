@@ -106,8 +106,8 @@
     "settings": "Settings",
     "stock": "Stock",
     "customers": "Customers",
-    "receivables": "Receivables",
-    "payables": "Payables",
+    "receivables": "Owed to you",
+    "payables": "You owe",
     "expenses": "Expenses",
     "comingSoon": "Coming soon",
     "unknownOrg": "Business",
@@ -395,7 +395,7 @@
   },
   "held": {
     "title": "Held sales",
-    "subtitle": "A cart can be held from New sale. There is no list endpoint, so this screen cannot load them.",
+    "subtitle": "Carts parked for later.",
     "noList": "Held sale list"
   },
   "receipt": {
@@ -445,8 +445,8 @@
     "pinLogin": "PIN sign in"
   },
   "receivables": {
-    "title": "Receivables",
-    "subtitle": "Who owes the shop. A cash repayment uses the open shift at that location.",
+    "title": "Owed to you",
+    "subtitle": "Customers who still owe you: credit sales and cash-on-delivery parcels.",
     "status": "Status",
     "open": "Open",
     "all": "All",
@@ -463,15 +463,34 @@
     "repay": "Record repayment",
     "reason": "Reason",
     "writeOff": "Write off",
-    "manual": "Old debt",
+    "manual": "Add an old debt",
     "create": "Add debt",
     "recorded": "Repayment recorded.",
-    "replayed": "This repayment was already recorded."
+    "replayed": "This repayment was already recorded.",
+    "addDebt": "Add old debt",
+    "overdueOnly": "Overdue only",
+    "totalOwed": "Total owed",
+    "overdueCount": "{count} overdue",
+    "empty": "Nobody owes you anything",
+    "emptyHint": "Credit sales and cash-on-delivery orders show here until they are paid.",
+    "noMatch": "Nothing matches",
+    "noMatchHint": "Try another customer, or show all.",
+    "original": "Original amount",
+    "paid": "Paid so far",
+    "writtenOff": "Written off",
+    "payments": "Payments",
+    "noPayments": "No payments yet.",
+    "wholeAmount": "Whole amount",
+    "writeOffHint": "For a debt that will never be paid.",
+    "writeOffQuestion": "Write off {amount}? {name} will no longer owe it.",
+    "writeOffConfirm": "Yes, write it off",
+    "manualHint": "For money a customer owed before you started using TrilloPOS.",
+    "chooseCustomer": "Choose a customer"
   },
   "payables": {
-    "title": "Payables",
-    "subtitle": "Who the shop owes. Owners and stock managers only.",
-    "cashiers": "Cashiers cannot open payables.",
+    "title": "You owe",
+    "subtitle": "Suppliers you still owe for stock you received.",
+    "cashiers": "Only owners and stock managers can see what the shop owes.",
     "status": "Status",
     "open": "Open",
     "all": "All",
@@ -486,14 +505,29 @@
     "reference": "Reference",
     "note": "Note",
     "pay": "Record payment",
-    "manual": "Old supplier debt",
+    "manual": "Add an old debt",
     "create": "Add debt",
     "recorded": "Payment recorded.",
-    "replayed": "This payment was already recorded."
+    "replayed": "This payment was already recorded.",
+    "addDebt": "Add old debt",
+    "overdueOnly": "Overdue only",
+    "totalOwed": "Total you owe",
+    "overdueCount": "{count} overdue",
+    "empty": "You owe nobody",
+    "emptyHint": "Stock received on credit shows here until you pay the supplier.",
+    "noMatch": "Nothing matches",
+    "noMatchHint": "Try another supplier, or show all.",
+    "original": "Original amount",
+    "paid": "Paid so far",
+    "payments": "Payments",
+    "noPayments": "No payments yet.",
+    "wholeAmount": "Whole amount",
+    "manualHint": "For money you owed a supplier before you started using TrilloPOS.",
+    "chooseSupplier": "Choose a supplier"
   },
   "expenses": {
     "title": "Expenses",
-    "subtitle": "Cash expenses come out of the open shift. Voided rows stay on the list.",
+    "subtitle": "Money spent running the shop. Cash expenses come out of the drawer.",
     "categories": "Categories",
     "category": "Category",
     "addCategory": "Add category",
@@ -506,13 +540,28 @@
     "reference": "Reference",
     "from": "From",
     "to": "To",
-    "apply": "Apply",
+    "apply": "Show",
     "monthNote": "Leave the dates empty to use this month in the business timezone.",
-    "void": "Void"
+    "void": "Void",
+    "recorded": "Expense recorded.",
+    "total": "Total",
+    "date": "Date",
+    "voided": "Voided",
+    "empty": "No expenses in this period",
+    "emptyHint": "Record rent, delivery, electricity and other costs here.",
+    "noCategories": "Add an expense category first, such as Rent or Delivery.",
+    "noCategoriesYet": "No categories yet.",
+    "newCategory": "New category",
+    "archiveQuestion": "Archive {name}? Past expenses keep it.",
+    "archiveConfirm": "Yes, archive",
+    "voidTitle": "Void expense",
+    "voidQuestion": "Void this {category} expense of {amount}? It stays on the list, marked void.",
+    "voidConfirm": "Yes, void it",
+    "keep": "Keep it"
   },
   "customers": {
     "title": "Customers",
-    "subtitle": "Search by name or phone. Credit terms are owner-only.",
+    "subtitle": "The people who buy from you. Credit limits are set by the owner.",
     "create": "Add customer",
     "edit": "Edit",
     "save": "Save",
@@ -594,7 +643,8 @@
     "loading": "Loading…",
     "cancel": "Cancel",
     "remove": "Remove",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "close": "Close"
   },
   "codes": {
     "method": {
@@ -643,6 +693,64 @@
       "POS": "In shop",
       "ONLINE": "Online",
       "ORDER": "Order"
+    },
+    "receivableStatus": {
+      "OPEN": "Open",
+      "PARTIALLY_SETTLED": "Part paid",
+      "SETTLED": "Paid",
+      "WRITTEN_OFF": "Written off"
+    },
+    "payableStatus": {
+      "OPEN": "Open",
+      "PARTIALLY_SETTLED": "Part paid",
+      "SETTLED": "Paid",
+      "CANCELLED": "Cancelled"
+    },
+    "receivableSource": {
+      "SALE": "Credit sale",
+      "ORDER": "Order",
+      "MANUAL": "Added by hand"
+    },
+    "payableSource": {
+      "STOCK_DOCUMENT": "Stock received",
+      "MANUAL": "Added by hand"
+    },
+    "docType": {
+      "OPENING": "Opening stock",
+      "STOCK_IN": "Stock in",
+      "STOCK_OUT": "Stock out",
+      "ADJUSTMENT": "Count adjustment",
+      "TRANSFER": "Transfer"
+    },
+    "docStatus": {
+      "DRAFT": "Draft",
+      "POSTED": "Posted",
+      "VOID": "Voided"
+    },
+    "movementType": {
+      "OPENING": "Opening stock",
+      "STOCK_IN": "Stock in",
+      "STOCK_OUT": "Stock out",
+      "SALE": "Sale",
+      "SALE_RETURN": "Return",
+      "TRANSFER_IN": "Transfer in",
+      "TRANSFER_OUT": "Transfer out",
+      "ADJUSTMENT": "Adjustment"
+    },
+    "locationType": {
+      "STORE": "Shop",
+      "WAREHOUSE": "Warehouse"
+    },
+    "registerStatus": {
+      "ACTIVE": "Active",
+      "REVOKED": "Revoked"
+    },
+    "customerType": {
+      "MEMBER": "Regular customer",
+      "B2B": "Business"
+    },
+    "costing": {
+      "WEIGHTED_AVERAGE": "Weighted average"
     }
   }
 }
