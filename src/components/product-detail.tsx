@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Decimal from "decimal.js";
 import { useTranslations } from "next-intl";
 
-import { Badge, Button, PageHeader, Panel, Soon } from "@/components/ui";
-import { Link } from "@/i18n/navigation";
+import { Badge, ButtonLink, Page, PageHeader, PageLoading, Panel } from "@/components/ui";
 import type { Schemas } from "@/lib/backend";
-import { addQuantities, formatAmount, marginPercent, weightedAverageCost } from "@/lib/money";
+import { addQuantities, formatAmount, formatQuantity, marginPercent, weightedAverageCost } from "@/lib/money";
 import { readJson } from "@/lib/read-json";
 
 export function ProductDetail({ productId }: { productId: string }) {
@@ -34,69 +34,90 @@ export function ProductDetail({ productId }: { productId: string }) {
   }, [productId]);
 
   if (!product) {
-    return null;
+    return <PageLoading panels={2} />;
   }
   const cost = weightedAverageCost(balances);
   const quantity = addQuantities(balances.map((row) => row.quantity));
   const margin = cost && product.retailPrice !== undefined ? marginPercent(String(product.retailPrice), cost) : null;
+  const low = product.trackInventory && new Decimal(quantity || 0).lte(product.reorderPoint ?? 0);
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
+    <Page>
       <PageHeader
-        title={product.name ?? ""}
-        subtitle={`${product.sku ?? "—"} · ${product.barcodes?.[0] ?? "—"} · ${category}`}
         actions={
-          <Link className="rounded-button bg-indigo px-4 py-2.5 text-sm font-semibold text-white" href={`/products/${product.id}/edit`}>
+          <ButtonLink href={`/products/${product.id}/edit`} variant="secondary">
             {t("edit")}
-          </Link>
+          </ButtonLink>
         }
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            {product.active === false ? <Badge tone="muted">{t("inactive")}</Badge> : null}
+            <span>{[product.sku, product.barcodes?.[0], category].filter(Boolean).join(" · ")}</span>
+          </span>
+        }
+        title={product.name ?? ""}
       />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label={t("retail")} value={`${formatAmount(product.retailPrice)} ${currency}`} note={margin ? `${margin}%` : "—"} />
-        <Stat label={t("wholesale")} value={`${formatAmount(product.wholesalePrice)} ${currency}`} />
-        <Stat label={t("cost")} value={cost ? `${formatAmount(cost)} ${currency}` : "—"} />
-        <Stat label={t("stock")} value={product.trackInventory ? quantity : "—"} />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat currency={currency} label={t("retail")} note={margin ? t("margin", { value: margin }) : undefined} value={formatAmount(product.retailPrice)} />
+        <Stat currency={currency} label={t("wholesale")} value={formatAmount(product.wholesalePrice)} />
+        <Stat currency={currency} label={t("cost")} value={cost ? formatAmount(cost) : "—"} />
+        <Stat
+          label={t("stock")}
+          note={product.trackInventory ? `${t("reorder")} ${product.reorderPoint ?? 0}` : undefined}
+          tone={low ? "warn" : undefined}
+          value={product.trackInventory ? formatQuantity(quantity) : "—"}
+        />
       </div>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <Badge tone="ok">{t("overview")}</Badge>
-        <Soon>{t("salesHistory")}</Soon>
-        <Soon>{t("promotions")}</Soon>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Panel title={t("locations")}>
-          <ul className="flex flex-col gap-2 text-sm">
-            {balances.length === 0 ? <li className="text-slate">{t("noStock")}</li> : null}
-            {balances.map((row) => (
-              <li className="flex justify-between" key={row.locationId}>
-                <span>{locations.find((location) => location.id === row.locationId)?.name ?? row.locationId}</span>
-                <span className="font-mono">{row.quantity}</span>
-              </li>
-            ))}
-          </ul>
+          {balances.length === 0 ? (
+            <p className="text-sm text-slate">{t("noStock")}</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-line text-sm">
+              {balances.map((row) => (
+                <li className="flex items-center justify-between gap-4 py-2 first:pt-0 last:pb-0" key={row.locationId}>
+                  <span className="font-medium text-ink">{locations.find((location) => location.id === row.locationId)?.name ?? row.locationId}</span>
+                  <span className="font-semibold tabular-nums">{formatQuantity(row.quantity)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
         <Panel title={t("flags")}>
-          <p className="text-sm text-slate">
-            {t("reorder")}: {product.reorderPoint ?? 0}
-          </p>
-          <p className="text-sm text-slate">
-            {product.sellInPos ? t("inPos") : t("notInPos")} · {product.sellOnline ? t("online") : t("notOnline")}
-          </p>
-          {product.active === false ? <Badge tone="muted">{t("inactive")}</Badge> : null}
+          <div className="flex flex-wrap gap-2">
+            <Badge tone={product.sellInPos ? "ok" : "muted"}>{product.sellInPos ? t("inPos") : t("notInPos")}</Badge>
+            <Badge tone={product.sellOnline ? "ok" : "muted"}>{product.sellOnline ? t("online") : t("notOnline")}</Badge>
+            <Badge tone={product.active === false ? "muted" : "info"}>{product.active === false ? t("inactive") : t("active")}</Badge>
+          </div>
         </Panel>
       </div>
-      <Button disabled type="button" variant="secondary">
-        {t("salesHistory")}
-      </Button>
-    </div>
+    </Page>
   );
 }
 
-function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
+function Stat({
+  label,
+  value,
+  currency,
+  note,
+  tone,
+}: {
+  label: string;
+  value: string;
+  currency?: string;
+  note?: string;
+  tone?: "warn";
+}) {
   return (
-    <div className="rounded-panel border border-line bg-white p-4">
-      <p className="text-sm text-slate">{label}</p>
-      <p className="font-mono text-2xl font-extrabold">{value}</p>
-      {note ? <p className="text-xs text-teal">{note}</p> : null}
+    <div className={`flex min-w-0 flex-col rounded-panel border bg-white p-4 shadow-xs sm:p-6 ${tone === "warn" ? "border-amber-300" : "border-line"}`}>
+      <p className="text-sm font-medium text-slate">{label}</p>
+      <p className="mt-2 flex flex-wrap items-baseline gap-x-1">
+        <span className="text-xl font-bold text-ink tabular-nums sm:text-2xl">{value}</span>
+        {currency && value !== "—" ? <span className="text-xs font-medium text-slate">{currency}</span> : null}
+      </p>
+      {note ? <p className={`mt-2 text-xs ${tone === "warn" ? "font-semibold text-amber-800" : "text-slate"}`}>{note}</p> : null}
     </div>
   );
 }
