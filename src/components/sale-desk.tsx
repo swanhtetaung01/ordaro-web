@@ -635,7 +635,7 @@ export function SaleDesk() {
 
       {/* on a phone the cart is far below the products: a bar that is always there takes you to it */}
       {lines.length > 0 ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-[0_-4px_16px_rgb(15_23_42/0.08)] backdrop-blur md:left-64 lg:hidden">
+        <div className="fixed inset-x-0 bottom-16 z-20 border-t border-line bg-white/95 px-4 pt-2 pb-2 md:bottom-0 md:pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-[0_-4px_16px_rgb(15_23_42/0.08)] backdrop-blur md:left-64 lg:hidden">
           <button className={buttonClasses("primary", "w-full", "lg")} onClick={showCart} type="button">
             <CartIcon className="size-5" />
             {t("cartCount", { count: lines.length })} · {t("goToCart")}

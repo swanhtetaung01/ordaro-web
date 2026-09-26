@@ -98,6 +98,64 @@ export function ArrowDownIcon(props: IconProps) {
   return <Svg {...props}><path d="M12 5v14M6 13l6 6 6-6" /></Svg>;
 }
 
+export function HomeIcon(props: IconProps) {
+  return <Svg {...props}><path d="m3 11 9-7 9 7" /><path d="M5 10v10h14V10M10 20v-6h4v6" /></Svg>;
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20v-1a4 4 0 0 1 4-4h5a4 4 0 0 1 4 4v1M16 4.3a3.5 3.5 0 0 1 0 7.4M21.5 20v-1a4 4 0 0 0-3-3.9" />
+    </Svg>
+  );
+}
+
+export function WalletIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 7a2 2 0 0 1 2-2h11v4" />
+      <path d="M4 7v10a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H6a2 2 0 0 1-2-2ZM16 14h.01" />
+    </Svg>
+  );
+}
+
+/** Settings, drawn as sliders. */
+export function SettingsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" />
+      <circle cx="15" cy="6" r="2" />
+      <circle cx="9" cy="12" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </Svg>
+  );
+}
+
+/** "More": four tiles. */
+export function MoreIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect height="6" rx="1.5" width="6" x="4" y="4" />
+      <rect height="6" rx="1.5" width="6" x="14" y="4" />
+      <rect height="6" rx="1.5" width="6" x="4" y="14" />
+      <rect height="6" rx="1.5" width="6" x="14" y="14" />
+    </Svg>
+  );
+}
+
+export function UserIcon(props: IconProps) {
+  return <Svg {...props}><circle cx="12" cy="8" r="4" /><path d="M4 20a8 8 0 0 1 16 0" /></Svg>;
+}
+
+export function CheckIcon(props: IconProps) {
+  return <Svg {...props}><path d="m5 12.5 4.5 4.5L19 7" /></Svg>;
+}
+
+export function ChevronUpDownIcon(props: IconProps) {
+  return <Svg {...props}><path d="m8 9 4-4 4 4M16 15l-4 4-4-4" /></Svg>;
+}
+
 export function Spinner({ className = "size-4" }: IconProps) {
   return (
     <svg aria-hidden="true" className={`animate-spin ${className}`} fill="none" viewBox="0 0 24 24">
