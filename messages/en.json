@@ -838,5 +838,142 @@
     "costing": {
       "WEIGHTED_AVERAGE": "Weighted average"
     }
+  },
+  "guide": {
+    "metaTitle": "Shop guide",
+    "link": "Shop guide",
+    "loginLink": "New to TrilloPOS? Read the shop guide",
+    "eyebrow": "Guide for your shop",
+    "title": "Run your shop in TrilloPOS",
+    "lede": "Your products, stock, orders and money in one place. Every day it tells you what you sold and what you made. It works in your phone's browser and on a laptop.",
+    "open": "Open TrilloPOS",
+    "languageNote": "The language menu at the top switches this guide, and TrilloPOS itself, between English and Burmese.",
+    "sampleNote": "The pictures come from a sample shop, <b>Shwe Online Shop</b>. Your screens show your own shop. Tap any picture to see it bigger.",
+    "chapters": "Chapters",
+    "step": "Step {number}",
+    "swipe": "Swipe for the next picture →",
+    "zoom": "See bigger: {caption}",
+    "zoomClose": "Tap anywhere to close",
+    "nav": {
+      "menu": "The menu",
+      "start": "Getting started",
+      "orders": "Every order",
+      "courier": "Courier pays you",
+      "returns": "Returns",
+      "stock": "New stock",
+      "expenses": "Expenses",
+      "day": "Your day",
+      "password": "Password",
+      "help": "Something wrong?"
+    },
+    "menu": {
+      "title": "Finding your way",
+      "intro": "On a laptop the menu is on the left. On a phone it is the bar along the bottom:",
+      "home": "<b>Home</b>: how your shop is doing today.",
+      "sales": "<b>Sales</b>: every order so far.",
+      "sell": "<b>Sell</b>, the round <b>+</b> in the middle: a new order.",
+      "products": "<b>Products</b>: your products and stock.",
+      "more": "<b>More</b>: everything else. Customers, Money, Settings and your account.",
+      "paths": "In this guide, <b>Money → Owed to you</b> means: open <b>Money</b>, then tap <b>Owed to you</b>.",
+      "shot": "More opens the full menu. Money holds Owed to you, You owe and Expenses."
+    },
+    "start": {
+      "title": "Getting started",
+      "intro": "Once, about 15 minutes.",
+      "createTitle": "Create your business",
+      "createBody": "On the sign-in page, tap <b>Create a business</b>. Enter your name, your shop's name, your phone (like 09 7xx xxx xxx), a password of at least 8 characters, and the <b>sign-up code</b> you were given. Then tap <b>Start selling</b>.",
+      "signInShot": "Tap Create a business. The language menu is at the top.",
+      "createShot": "Fill in the form, then tap Start selling.",
+      "setupTitle": "Set up your business",
+      "setupIntro": "Open <b>Settings → Business details</b> (on a phone, under <b>More</b>) and set:",
+      "setupType": "<b>Business type</b>: Online shop.",
+      "setupTax": "<b>Tax %</b>: 0, unless you really charge commercial tax. With the starting value of 5, your profit would look smaller than it is.",
+      "setupCredit": "<b>New customers' credit limit</b>: the value of your biggest usual parcel, for example 300,000. Cash on delivery needs this.",
+      "setupDays": "<b>Days to pay</b>: how long your delivery company takes to pay you, for example 14.",
+      "setupSave": "Then press <b>Save</b>.",
+      "typeShot": "Online shop, and Tax % at 0.",
+      "creditShot": "Credit for cash-on-delivery buyers.",
+      "productsTitle": "Add your products",
+      "productsIntro": "Open <b>Products</b> and tap <b>Add product</b> for each item. Enter the <b>Product name</b> and <b>Retail price</b>, then:",
+      "productsCost": "<b>Opening unit cost</b>: what one cost you. This is how TrilloPOS works out your profit, so it is worth entering.",
+      "productsQty": "<b>Opening quantity</b>: how many you have now.",
+      "productsReorder": "<b>Reorder point</b>: when stock falls to this number, the dashboard tells you to buy more.",
+      "sellOnlineTitle": "Tick “Sell online”",
+      "sellOnlineBody": "New products start with it unticked, and an online order only lists products that have it ticked.",
+      "priceShot": "Cost and price. TrilloPOS shows the profit on each one.",
+      "stockShot": "How many you have, and Sell online ticked."
+    },
+    "orders": {
+      "title": "Every order",
+      "intro": "For every Facebook, Viber or phone order.",
+      "addTitle": "Tap Sell and add the products",
+      "addBody": "Tap <b>Sell</b> (on a laptop, <b>New sale</b>). Because your business is an online shop, it opens in <b>Online order</b> mode, so there is no drawer or shift to open.",
+      "addTap": "Tap a product to add it. Tap it again to add one more.",
+      "addShot": "The bar at the bottom takes you to the cart.",
+      "payTitle": "Choose the buyer and how they paid",
+      "payBody": "Tap <b>Cart and payment</b>. Under <b>Customer</b>, search by name or phone and tap <b>Select</b>, or add a new customer. Change quantities in the cart if you need to. Then choose the <b>Method</b>:",
+      "walletHow": "KBZPay, WavePay, AYA Pay, bank transfer",
+      "walletWhat": "Choose that method and type the transaction number under <b>Reference</b>.",
+      "codHow": "Cash on delivery",
+      "codWhat": "Choose <b>On credit (pay later)</b>. Nothing else to type: the order waits under <b>Owed to you</b> until the courier pays you.",
+      "cashHow": "Cash in person",
+      "cashWhat": "Choose <b>Cash</b>.",
+      "customerShot": "The buyer, with what they owe and the credit they have left.",
+      "paymentShot": "Cash on delivery: On credit (pay later).",
+      "chargeTitle": "Press Charge",
+      "chargeBody": "The receipt appears. You can screenshot it for the customer.",
+      "chargeStock": "Stock goes down by itself. You never count stock by hand in the app.",
+      "receiptShot": "The receipt of a cash-on-delivery order."
+    },
+    "courier": {
+      "title": "When the delivery company pays you",
+      "body": "Open <b>Money → Owed to you</b>. Every cash-on-delivery parcel not yet paid is listed with the buyer's name.",
+      "steps": "For each parcel in the courier's payment, tap it, then tap <b>Whole amount</b>. Choose the method (for example <b>Bank transfer</b>), type the courier's reference, and press <b>Record repayment</b>.",
+      "feesTitle": "Delivery fees",
+      "feesBody": "The courier usually keeps a fee from the total. Record each parcel's <b>full</b> price here, then record the fees once under <b>Money → Expenses</b>, in a category such as <i>Delivery fees</i>. That way your profit shows what really happened.",
+      "listShot": "Everything customers still owe you.",
+      "repayShot": "Whole amount fills in what is left to pay."
+    },
+    "returns": {
+      "title": "When a parcel comes back",
+      "body": "Or when a customer returns something. Open <b>Sales</b>, find the order and open it. Under <b>Return</b>, enter how many came back.",
+      "restock": "Leave <b>Restock</b> ticked if the item can be sold again. Untick it if it is damaged. Then choose the <b>Refund method</b>:",
+      "cod": "A cash-on-delivery parcel that was never paid: <b>On credit (pay later)</b>. It cancels what the buyer owes.",
+      "paid": "A customer you paid back: the method you used, such as KBZPay or cash.",
+      "submit": "Then press <b>Return</b>.",
+      "shot": "One longyi came back: back on the shelf, and the buyer owes less."
+    },
+    "stock": {
+      "title": "New stock from your supplier",
+      "body": "Open <b>Products → Stock</b> and tap <b>New stock entry</b>. Choose <b>Stock in</b>, the supplier and the product, then enter the quantity and what one cost you. Press <b>Post</b>.",
+      "owe": "What you owe the supplier then shows under <b>Money → You owe</b>. When you pay them, record the payment there.",
+      "shot": "40 packs in from the supplier, at 2,100 each."
+    },
+    "expenses": {
+      "title": "Other money going out",
+      "body": "Open <b>Money → Expenses</b> for delivery fees, packaging, phone top-ups or boosting posts. Tap <b>Record expense</b>, pick a category and enter the amount.",
+      "categories": "The first time, add your categories under <b>Categories</b>, for example <i>Delivery fees</i>, <i>Packaging</i> and <i>Boosting posts</i>.",
+      "shot": "This month's expenses, with the total."
+    },
+    "day": {
+      "title": "What your day looks like",
+      "intro": "Open <b>Home</b> (on a laptop, <b>Dashboard</b>):",
+      "sales": "<b>Sales today / this month</b>: what customers paid.",
+      "profit": "<b>Gross profit</b>: sales less what the goods cost you. The line <i>after expenses</i> also takes off your expenses.",
+      "owed": "<b>Customers owe you</b>: credit and cash-on-delivery parcels not yet paid. Tap it to see who.",
+      "owe": "<b>You owe suppliers</b>: stock you received and have not paid for yet.",
+      "low": "<b>Running low</b>, further down: products at or below their reorder point.",
+      "shot": "A day of six online orders."
+    },
+    "password": {
+      "title": "Your password",
+      "change": "Change it any time. Open the menu under your name (on a phone, <b>More</b>, then your name at the bottom) and choose <b>Account</b>.",
+      "forgot": "Forgot it? Ask the person who gave you the sign-up code. They can give you a temporary password in a minute; then change it under <b>Account</b>. After too many wrong tries, TrilloPOS asks you to wait 15 minutes."
+    },
+    "help": {
+      "title": "If something looks wrong",
+      "report": "Write down what you did and what you expected, take a screenshot, and send both to the person who set up TrilloPOS for you.",
+      "history": "Nothing in TrilloPOS is ever deleted. A mistaken sale is corrected with a return, and a mistaken expense can be voided. That is on purpose: the history always explains the numbers."
+    }
   }
 }
