@@ -103,18 +103,59 @@ function problemOf(error: unknown, status: number): Problem {
   return { code: status === 401 ? "invalid_credentials" : "unknown" };
 }
 
+type Rotation = { kind: "renewed"; tokens: Tokens } | { kind: "denied" } | { kind: "failed" };
+
+/**
+ * Screens load several things at once, so an expired access token reaches this server as several
+ * requests carrying the same refresh token. The backend revokes the whole session when it sees a
+ * refresh token twice, so each one is rotated once: requests that share it, and requests sent just
+ * before the browser stored the new cookie, all get the same new tokens.
+ */
+const rotations = new Map<string, Promise<Rotation>>();
+const ROTATION_SHARED_MS = 30_000;
+
+function rotate(refreshToken: string) {
+  const pending = rotations.get(refreshToken);
+  if (pending) {
+    return pending;
+  }
+  const rotation = client()
+    .POST("/auth/refresh", { body: { refreshToken } })
+    .then(({ data, response }): Rotation => {
+      if (response.ok && data?.accessToken) {
+        return { kind: "renewed", tokens: data };
+      }
+      return response.status === 401 ? { kind: "denied" } : { kind: "failed" };
+    })
+    .catch((): Rotation => ({ kind: "failed" }));
+  rotations.set(refreshToken, rotation);
+  void rotation.then((outcome) => {
+    // a backend that did not answer may be asked again at once; an answer holds for a while
+    if (outcome.kind === "failed") {
+      rotations.delete(refreshToken);
+    } else {
+      setTimeout(() => rotations.delete(refreshToken), ROTATION_SHARED_MS);
+    }
+  });
+  return rotation;
+}
+
 async function refreshAccess() {
   const refreshToken = (await cookies()).get(REFRESH)?.value;
   if (!refreshToken) {
     return undefined;
   }
-  const result = await client().POST("/auth/refresh", { body: { refreshToken } });
-  if (!result.response.ok || !result.data?.accessToken) {
+  const outcome = await rotate(refreshToken);
+  if (outcome.kind === "denied") {
     await clearTokens();
     return undefined;
   }
-  await writeTokens(result.data);
-  return result.data.accessToken;
+  if (outcome.kind === "failed") {
+    // the backend is down or slow: keep the session, the next request tries again
+    return undefined;
+  }
+  await writeTokens(outcome.tokens);
+  return outcome.tokens.accessToken;
 }
 
 export async function accessToken() {
