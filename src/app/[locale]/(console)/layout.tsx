@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect as nextRedirect } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 
-import { Shell } from "@/components/ui";
+import { Shell } from "@/components/shell";
 import { api, tokenKind, withAccess } from "@/lib/backend";
 import type { Membership, Schemas } from "@/lib/backend";
 

@@ -1,75 +1,18 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
   AlertIcon,
   CheckCircleIcon,
   ChevronDownIcon,
-  CloseIcon,
   InfoIcon,
   LogoutIcon,
-  MenuIcon,
   SearchIcon,
   Spinner,
 } from "@/components/icons";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
-
-type NavItem = { href: string; key: string };
-
-const home: NavItem = { href: "/dashboard", key: "dashboard" };
-
-/** The menu in four groups, in the order a shop's day runs. */
-const groups: { key: string; items: NavItem[] }[] = [
-  {
-    key: "groupSell",
-    items: [
-      { href: "/sales/new", key: "newSale" },
-      { href: "/sales", key: "salesLog" },
-      { href: "/sales/held", key: "heldSales" },
-      { href: "/customers", key: "customers" },
-    ],
-  },
-  {
-    key: "groupStock",
-    items: [
-      { href: "/products", key: "products" },
-      { href: "/stock", key: "stock" },
-      { href: "/categories", key: "categories" },
-      { href: "/suppliers", key: "suppliers" },
-    ],
-  },
-  {
-    key: "groupMoney",
-    items: [
-      { href: "/receivables", key: "receivables" },
-      { href: "/payables", key: "payables" },
-      { href: "/expenses", key: "expenses" },
-    ],
-  },
-  {
-    key: "groupSetup",
-    items: [
-      { href: "/locations", key: "locations" },
-      { href: "/staff", key: "staff" },
-      { href: "/registers", key: "registers" },
-      { href: "/settings", key: "settings" },
-      { href: "/account", key: "account" },
-    ],
-  },
-];
-
-const nav = [home, ...groups.flatMap((group) => group.items)];
-
-/** The most specific item wins, so /sales/held does not also light up /sales. */
-function activeHref(pathname: string) {
-  return nav
-    .map((item) => item.href)
-    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
-    .sort((a, b) => b.length - a.length)[0];
-}
+import { Link, useRouter } from "@/i18n/navigation";
 
 /** The keyboard focus ring every control shares; a mouse or a finger never leaves it behind. */
 export const focusRing =
@@ -81,8 +24,6 @@ export const insetFocusRing =
 
 /** An inline link inside a sentence or under a form. */
 export const linkClasses = `rounded-sm font-semibold text-teal underline-offset-4 hover:underline ${focusRing}`;
-
-const iconButton = `inline-flex size-12 shrink-0 items-center justify-center rounded-button text-slate transition hover:bg-slate-100 hover:text-ink motion-reduce:transition-none ${focusRing}`;
 
 /** A square button that shows only an icon; the label is what a screen reader says and the tooltip shows. */
 export function IconButton({
@@ -107,173 +48,6 @@ export function IconButton({
 }
 
 const menuRow = `flex min-h-12 w-full items-center gap-2 rounded-button px-4 text-sm transition-colors motion-reduce:transition-none md:min-h-10 ${focusRing}`;
-
-export function Shell({
-  children,
-  organizationName,
-  userName,
-}: {
-  children: React.ReactNode;
-  organizationName: string;
-  userName: string;
-}) {
-  const t = useTranslations("shell");
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const drawer = useRef<HTMLDialogElement>(null);
-  const active = activeHref(pathname);
-  const current = nav.find((item) => item.href === active);
-
-  // on a phone the menu is a modal <dialog>: focus stays inside, Esc closes it, the page behind is inert
-  useEffect(() => {
-    const dialog = drawer.current;
-    if (open && dialog && !dialog.open) {
-      dialog.showModal();
-    }
-    if (!open && dialog?.open) {
-      dialog.close();
-    }
-  }, [open]);
-
-  // turned sideways past the breakpoint, the sidebar takes over: never leave a hidden modal open
-  useEffect(() => {
-    const wide = window.matchMedia("(min-width: 48rem)");
-    const close = () => {
-      if (wide.matches) {
-        setOpen(false);
-      }
-    };
-    wide.addEventListener("change", close);
-    return () => wide.removeEventListener("change", close);
-  }, []);
-
-  return (
-    <div className="min-h-dvh bg-surface text-ink md:flex">
-      <a
-        className={`sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-button focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg ${focusRing}`}
-        href="#main"
-      >
-        {t("skipToContent")}
-      </a>
-
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-white/95 px-4 backdrop-blur md:hidden">
-        <Brand organizationName={organizationName} />
-        <button
-          aria-expanded={open}
-          aria-haspopup="dialog"
-          className={buttonClasses("secondary", "max-w-[55%]")}
-          onClick={() => setOpen(true)}
-          type="button"
-        >
-          <MenuIcon className="size-5 shrink-0" />
-          <span className="truncate">{current ? t(current.key) : t("menu")}</span>
-        </button>
-      </header>
-
-      <dialog
-        aria-label={t("menu")}
-        className="m-0 h-dvh max-h-none w-80 max-w-[85vw] border-0 bg-transparent p-0 text-ink backdrop:bg-[rgb(15_23_42/0.45)] md:hidden"
-        onClick={(event) => {
-          // a tap on the dimmed page beside the menu closes it
-          if (event.target === event.currentTarget) {
-            setOpen(false);
-          }
-        }}
-        onClose={() => setOpen(false)}
-        ref={drawer}
-      >
-        <div className="flex h-full flex-col bg-white shadow-xl">
-          <div className="flex h-16 shrink-0 items-center gap-2 border-b border-line px-4">
-            <Brand organizationName={organizationName} />
-            <button aria-label={t("close")} className={iconButton} onClick={() => setOpen(false)} type="button">
-              <CloseIcon />
-            </button>
-          </div>
-          <Navigation active={active} onNavigate={() => setOpen(false)} />
-          <AccountBox userName={userName} />
-        </div>
-      </dialog>
-
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-white">
-        <div className="flex h-16 shrink-0 items-center px-4">
-          <Brand organizationName={organizationName} />
-        </div>
-        <Navigation active={active} />
-        <AccountBox userName={userName} />
-      </aside>
-
-      <main className="min-w-0 flex-1 focus:outline-hidden" id="main" tabIndex={-1}>
-        {children}
-      </main>
-    </div>
-  );
-}
-
-function Brand({ organizationName }: { organizationName: string }) {
-  const t = useTranslations("shell");
-  return (
-    <Link className={`flex min-w-0 flex-1 items-center gap-2 rounded-button ${focusRing}`} href="/dashboard">
-      <span
-        aria-hidden="true"
-        className="flex size-8 shrink-0 items-center justify-center rounded-button bg-indigo text-sm font-extrabold text-white"
-      >
-        T
-      </span>
-      <span className="min-w-0">
-        <span className="block text-base leading-tight font-bold text-ink">{t("product")}</span>
-        <span className="block truncate text-xs text-slate">{organizationName}</span>
-      </span>
-    </Link>
-  );
-}
-
-function Navigation({ active, onNavigate }: { active?: string; onNavigate?: () => void }) {
-  const t = useTranslations("shell");
-  const id = useId();
-
-  function link(item: NavItem) {
-    const current = item.href === active;
-    return (
-      <li key={item.href}>
-        <Link
-          aria-current={current ? "page" : undefined}
-          className={`${menuRow} ${
-            current ? "bg-indigo/10 font-semibold text-indigo" : "font-medium text-slate hover:bg-slate-100 hover:text-ink"
-          }`}
-          href={item.href}
-          onClick={onNavigate}
-        >
-          {t(item.key)}
-        </Link>
-      </li>
-    );
-  }
-
-  return (
-    <nav aria-label={t("menu")} className="flex-1 overflow-y-auto px-2 pb-4">
-      <ul>{link(home)}</ul>
-      {groups.map((group) => (
-        <div className="mt-4" key={group.key}>
-          <p className="px-4 pb-2 text-xs font-semibold text-slate-500" id={`${id}-${group.key}`}>
-            {t(group.key)}
-          </p>
-          <ul aria-labelledby={`${id}-${group.key}`}>{group.items.map((item) => link(item))}</ul>
-        </div>
-      ))}
-    </nav>
-  );
-}
-
-function AccountBox({ userName }: { userName: string }) {
-  const t = useTranslations("shell");
-  return (
-    <div className="flex shrink-0 flex-col gap-2 border-t border-line p-4">
-      <p className="truncate text-sm font-semibold text-ink">{userName}</p>
-      <LanguageSwitcher fullWidth />
-      <SignOut label={t("signOut")} pendingLabel={t("signingOut")} />
-    </div>
-  );
-}
 
 /** Signs out on this phone or browser, then goes to the sign-in page. */
 export function SignOut({

@@ -122,7 +122,15 @@
     "groupSetup": "Setup",
     "signOut": "Sign out",
     "signingOut": "Signing out…",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "sales": "Sales",
+    "allProducts": "All products",
+    "business": "Business details",
+    "home": "Home",
+    "sell": "Sell",
+    "more": "More",
+    "tabs": "Main sections",
+    "accountMenu": "Account menu"
   },
   "products": {
     "title": "Product catalog",

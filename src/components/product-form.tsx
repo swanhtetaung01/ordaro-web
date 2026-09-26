@@ -232,7 +232,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       ) : null}
       {error ? <Alert>{error}</Alert> : null}
       {/* Save stays within reach at the bottom of a long form, on a phone above all */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap justify-end gap-2 border-t border-line bg-white/95 px-4 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)] backdrop-blur sm:-mx-8 sm:px-8">
+      <div className="sticky bottom-16 z-10 -mx-4 flex flex-wrap justify-end gap-2 border-t border-line bg-white/95 px-4 pt-4 pb-4 backdrop-blur sm:-mx-8 sm:px-8 md:bottom-0 md:pb-[max(env(safe-area-inset-bottom),1rem)]">
         <Button onClick={() => router.push(editing ? `/products/${productId}` : "/products")} type="button" variant="secondary">
           {t("cancel")}
         </Button>
