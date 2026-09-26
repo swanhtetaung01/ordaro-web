@@ -131,7 +131,16 @@ export function SignupForm() {
           required
           type="password"
         />
-        <Field autoComplete="off" hint={t("codeHint")} label={t("code")} name="signupCode" />
+        {/* the code is compared exactly: phone keyboards must not capitalise or autocorrect it */}
+        <Field
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect="off"
+          hint={t("codeHint")}
+          label={t("code")}
+          name="signupCode"
+          spellCheck={false}
+        />
       </div>
       {error ? <Alert>{error}</Alert> : null}
       <Button busy={pending} className="w-full" size="lg" type="submit">
