@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       body: {
         currentPassword: body.currentPassword ?? "",
         newPassword: body.newPassword ?? "",
-        deviceLabel: "ordaro-web",
+        deviceLabel: "trillopos-web",
       },
     }),
   );

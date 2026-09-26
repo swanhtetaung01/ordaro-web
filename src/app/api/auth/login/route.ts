@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { phone?: string; password?: string };
   const result = await publicCall<Schemas["LoginResult"]>(() =>
     api().POST("/auth/login", {
-      body: { phone: body.phone ?? "", password: body.password ?? "", deviceLabel: "ordaro-web" },
+      body: { phone: body.phone ?? "", password: body.password ?? "", deviceLabel: "trillopos-web" },
     }),
   );
   if (!result.ok || !result.data?.tokens) {

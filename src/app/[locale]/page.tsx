@@ -7,7 +7,7 @@ export default async function IndexPage({ params }: { params: Promise<{ locale: 
   const { locale } = await params;
   setRequestLocale(locale);
   const jar = await cookies();
-  redirect({ href: jar.has("ordaro_access") || jar.has("ordaro_refresh") ? "/dashboard" : "/login", locale });
+  redirect({ href: jar.has("trillopos_access") || jar.has("trillopos_refresh") ? "/dashboard" : "/login", locale });
   return null;
 }
 

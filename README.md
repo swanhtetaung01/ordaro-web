@@ -1,6 +1,6 @@
-# Ordaro web
+# TrilloPOS web
 
-Next.js App Router UI for Ordaro. The browser talks only to this app. Route handlers under `/api/auth` call `ordaro-backend` and keep access and refresh tokens in httpOnly cookies.
+Next.js App Router UI for TrilloPOS. The browser talks only to this app. Route handlers under `/api/auth` call `trillopos-backend` and keep access and refresh tokens in httpOnly cookies.
 
 ## Run
 
@@ -18,9 +18,9 @@ Copy `.env.example` to `.env.local` if the API is not on `http://localhost:8080`
 `src/lib/api/schema.ts` is generated from `openapi/backend.json`, which is the springdoc document from the backend (`springdoc-openapi` 3.1.1, Boot 4.1).
 
 ```powershell
-cd ../ordaro-backend
+cd ../trillopos-backend
 ./mvnw -Dtest=OpenApiExportTest test
-Copy-Item target/openapi.json ../ordaro-web/openapi/backend.json
-cd ../ordaro-web
+Copy-Item target/openapi.json ../trillopos-web/openapi/backend.json
+cd ../trillopos-web
 corepack pnpm openapi
 ```
