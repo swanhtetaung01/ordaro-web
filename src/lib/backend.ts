@@ -17,7 +17,7 @@ export type Problem = {
 };
 
 function apiBase() {
-  return process.env.ORDARO_API_URL ?? "http://localhost:8080";
+  return process.env.TRILLOPOS_API_URL ?? "http://localhost:8080";
 }
 
 /**

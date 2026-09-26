@@ -3,7 +3,7 @@ import type { Tokens } from "@/lib/backend";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { deviceCredential?: string; membershipId?: string; pin?: string };
-  const response = await fetch(`${process.env.ORDARO_API_URL ?? "http://localhost:8080"}/auth/pin`, {
+  const response = await fetch(`${process.env.TRILLOPOS_API_URL ?? "http://localhost:8080"}/auth/pin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -3,7 +3,7 @@
  * API behind it. No session needed, no data returned.
  */
 export async function GET() {
-  const base = process.env.ORDARO_API_URL ?? "http://localhost:8080";
+  const base = process.env.TRILLOPOS_API_URL ?? "http://localhost:8080";
   try {
     const response = await fetch(`${base}/actuator/health`, { cache: "no-store", signal: AbortSignal.timeout(3000) });
     const backend = response.ok ? "UP" : "DOWN";
