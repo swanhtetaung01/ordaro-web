@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { organizationId?: string };
   const switched = await withAccess((token) =>
     api(token).POST("/auth/switch", {
-      body: { organizationId: body.organizationId ?? "", deviceLabel: "ordaro-web" },
+      body: { organizationId: body.organizationId ?? "", deviceLabel: "trillopos-web" },
     }),
   );
   if (!switched.response.ok || !switched.data) {

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         password: body.password ?? "",
         fullName: body.fullName ?? "",
         businessName: body.businessName ?? "",
-        deviceLabel: "ordaro-web",
+        deviceLabel: "trillopos-web",
         signupCode: body.signupCode || undefined,
       },
     }),

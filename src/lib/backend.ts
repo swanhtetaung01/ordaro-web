@@ -7,8 +7,8 @@ export type Schemas = components["schemas"];
 export type Tokens = Schemas["IssuedTokens"];
 export type Membership = Schemas["PickerEntry"];
 
-const ACCESS = "ordaro_access";
-const REFRESH = "ordaro_refresh";
+const ACCESS = "trillopos_access";
+const REFRESH = "trillopos_refresh";
 
 export type Problem = {
   code?: string;
