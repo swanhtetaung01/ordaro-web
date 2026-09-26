@@ -435,7 +435,7 @@
     "exactDisabled": "Exact-amount and change preview",
     "modeStore": "In the shop",
     "modeOnline": "Online order",
-    "onlineHint": "Paid by KBZPay, WavePay or transfer: pick it and add the transaction number. Cash on delivery: choose or add the buyer and pay “On credit”. It shows under Receivables until the courier pays you; record that payment there.",
+    "onlineHint": "Paid by KBZPay, WavePay or transfer: pick it and add the transaction number. Cash on delivery: choose or add the buyer and pay “On credit (pay later)”. It shows under Owed to you until the courier pays you; record that payment there.",
     "shipFrom": "Ship from",
     "newCustomer": "New customer",
     "newCustomerName": "Name",
