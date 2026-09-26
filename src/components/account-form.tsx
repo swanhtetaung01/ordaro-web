@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button, Field, PageHeader, Panel } from "@/components/ui";
+import { Alert, Button, Field, Page, PageHeader, Panel } from "@/components/ui";
 import { messageFor, readResponse } from "@/lib/read-json";
 
 /** Change your own password. Every other phone and browser signed in as you is signed out. */
@@ -18,11 +18,11 @@ export function AccountForm() {
   const [pending, setPending] = useState(false);
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+    <Page width="narrow">
+      <PageHeader subtitle={t("subtitle")} title={t("title")} />
       <Panel title={t("changePassword")}>
         <form
-          className="grid max-w-md gap-3"
+          className="flex max-w-md flex-col gap-4"
           onSubmit={async (event) => {
             event.preventDefault();
             setError(undefined);
@@ -54,11 +54,11 @@ export function AccountForm() {
             onChange={(event) => setNext(event.target.value)} required type="password" value={next} />
           <Field autoComplete="new-password" label={t("again")} minLength={8} onChange={(event) => setAgain(event.target.value)}
             required type="password" value={again} />
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          {saved ? <p className="text-sm text-teal">{t("saved")}</p> : null}
-          <Button disabled={pending} type="submit">{t("save")}</Button>
+          {error ? <Alert>{error}</Alert> : null}
+          {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
+          <Button busy={pending} className="self-start" type="submit">{t("save")}</Button>
         </form>
       </Panel>
-    </div>
+    </Page>
   );
 }

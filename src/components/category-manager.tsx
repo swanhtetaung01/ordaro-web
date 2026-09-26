@@ -3,9 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button, Field, PageHeader, Panel, SelectField, Soon } from "@/components/ui";
+import { BoxIcon, PlusIcon } from "@/components/icons";
+import {
+  Alert,
+  Button,
+  EmptyState,
+  Field,
+  insetFocusRing,
+  LoadingRows,
+  Modal,
+  Page,
+  PageHeader,
+  SearchField,
+  SelectField,
+} from "@/components/ui";
 import type { Schemas } from "@/lib/backend";
-import { readJson } from "@/lib/read-json";
+import { messageFor, readJson } from "@/lib/read-json";
 
 type Category = Schemas["CategoryView"] & { parentId?: string };
 type Product = Schemas["ProductView"];
@@ -15,10 +28,16 @@ export function CategoryManager() {
   const errors = useTranslations("errors");
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
   const [query, setQuery] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [renaming, setRenaming] = useState<Category>();
+  const [newName, setNewName] = useState("");
   const [error, setError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
+  const [busy, setBusy] = useState<"add" | "rename">();
 
   async function load() {
     const [nextCategories, nextProducts] = await Promise.all([
@@ -33,10 +52,14 @@ export function CategoryManager() {
     void Promise.all([
       readJson<Category[]>("/api/catalog/categories"),
       readJson<Product[]>("/api/catalog/products"),
-    ]).then(([nextCategories, nextProducts]) => {
-      setCategories(nextCategories);
-      setProducts(nextProducts);
-    });
+    ])
+      .then(([nextCategories, nextProducts]) => {
+        setCategories(nextCategories);
+        setProducts(nextProducts);
+      })
+      .catch((caught) => setError(messageFor(caught, errors, (code) => errors.has(code))))
+      .finally(() => setLoaded(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- translator identity is not a reload
   }, []);
 
   const rows = useMemo(() => {
@@ -44,97 +67,135 @@ export function CategoryManager() {
     return categories.filter((category) => !needle || (category.name ?? "").toLowerCase().includes(needle));
   }, [categories, query]);
 
+  function fail(caught: unknown) {
+    setFormError(messageFor(caught, errors, (code) => errors.has(code)));
+  }
+
+  async function add(event: React.FormEvent) {
+    event.preventDefault();
+    setFormError(undefined);
+    setBusy("add");
+    try {
+      await readJson("/api/catalog/categories", {
+        method: "POST",
+        body: JSON.stringify({ name, parentId: parentId || undefined }),
+      });
+      setName("");
+      setParentId("");
+      setAdding(false);
+      await load();
+    } catch (caught) {
+      fail(caught);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function rename(event: React.FormEvent) {
+    event.preventDefault();
+    if (!renaming?.id || !newName.trim()) {
+      return;
+    }
+    setFormError(undefined);
+    setBusy("rename");
+    try {
+      await readJson(`/api/catalog/categories/${renaming.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: newName }),
+      });
+      setRenaming(undefined);
+      await load();
+    } catch (caught) {
+      fail(caught);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  const parentName = (category: Category) => categories.find((row) => row.id === category.parentId)?.name;
+  const count = (category: Category) => products.filter((product) => product.categoryId === category.id).length;
+  const openRename = (category: Category) => {
+    setFormError(undefined);
+    setNewName(category.name ?? "");
+    setRenaming(category);
+  };
+  const addButton = (variant: "primary" | "secondary") => (
+    <Button
+      onClick={() => {
+        setFormError(undefined);
+        setAdding(true);
+      }}
+      type="button"
+      variant={variant}
+    >
+      <PlusIcon className="size-5" />
+      {t("add")}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-8">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-        <Panel title={t("create")}>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              setError(undefined);
-              try {
-                await readJson("/api/catalog/categories", {
-                  method: "POST",
-                  body: JSON.stringify({ name, parentId: parentId || undefined }),
-                });
-                setName("");
-                setParentId("");
-                await load();
-              } catch (caught) {
-                const code = caught instanceof Error ? caught.message : "unknown";
-                setError(errors.has(code) ? errors(code) : errors("unknown"));
-              }
-            }}
-          >
-            <Field label={t("name")} onChange={(event) => setName(event.target.value)} required value={name} />
-            <SelectField label={t("parent")} onChange={(event) => setParentId(event.target.value)} value={parentId}>
-              <option value="">{t("noParent")}</option>
-              {categories
-                .filter((category) => !category.parentId)
-                .map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-            </SelectField>
-            <Button disabled={!name} type="submit">
-              {t("add")}
-            </Button>
-          </form>
-        </Panel>
-        <Panel>
-          <input
-            className="mb-3 w-full rounded-control border border-line px-3 py-2 text-sm"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("search")}
-            value={query}
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="text-xs uppercase text-slate">
-                <tr>
-                  <th className="py-2">{t("name")}</th>
-                  <th>{t("parent")}</th>
-                  <th>{t("count")}</th>
-                  <th>{t("actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((category) => (
-                  <tr className="border-t border-line" key={category.id}>
-                    <td className="py-2 font-medium">{category.name}</td>
-                    <td>{categories.find((row) => row.id === category.parentId)?.name ?? t("noParent")}</td>
-                    <td>{products.filter((product) => product.categoryId === category.id).length}</td>
-                    <td>
-                      <button
-                        className="text-sm text-teal"
-                        onClick={async () => {
-                          const next = window.prompt(t("rename"), category.name ?? "");
-                          if (!next || !category.id) {
-                            return;
-                          }
-                          await readJson(`/api/catalog/categories/${category.id}`, {
-                            method: "PATCH",
-                            body: JSON.stringify({ name: next }),
-                          });
-                          await load();
-                        }}
-                        type="button"
-                      >
-                        {t("rename")}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Soon>{t("status")}</Soon>
-        </Panel>
-      </div>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-    </div>
+    <Page>
+      <PageHeader actions={addButton("primary")} subtitle={t("subtitle")} title={t("title")} />
+      {categories.length > 0 ? <SearchField label={t("search")} onChange={(event) => setQuery(event.target.value)} value={query} /> : null}
+      {error ? <Alert>{error}</Alert> : null}
+
+      {!loaded ? (
+        <LoadingRows rows={4} />
+      ) : categories.length === 0 ? (
+        error ? null : <EmptyState action={addButton("secondary")} hint={t("emptyHint")} icon={<BoxIcon className="size-6" />} title={t("empty")} />
+      ) : rows.length === 0 ? (
+        <EmptyState hint={t("noMatchHint")} title={t("noMatch")} />
+      ) : (
+        <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-panel border border-line bg-white shadow-xs">
+          {rows.map((category) => (
+            <li key={category.id}>
+              <button
+                className={`flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-slate-50 motion-reduce:transition-none ${insetFocusRing}`}
+                onClick={() => openRename(category)}
+                type="button"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-ink">{category.name}</span>
+                  {parentName(category) ? <span className="block truncate text-xs text-slate">{t("inParent", { parent: parentName(category) ?? "" })}</span> : null}
+                </span>
+                <span className="shrink-0 text-sm text-slate tabular-nums">{t("productCount", { count: count(category) })}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Modal onClose={() => setAdding(false)} open={adding} title={t("create")}>
+        <form className="flex flex-col gap-4" onSubmit={(event) => void add(event)}>
+          <Field label={t("name")} onChange={(event) => setName(event.target.value)} required value={name} />
+          <SelectField label={t("parent")} onChange={(event) => setParentId(event.target.value)} value={parentId}>
+            <option value="">{t("noParent")}</option>
+            {categories
+              .filter((category) => !category.parentId)
+              .map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+          </SelectField>
+          <p className="text-xs text-slate">{t("parentHint")}</p>
+          {formError ? <Alert>{formError}</Alert> : null}
+          <Button busy={busy === "add"} className="self-start" disabled={!name} type="submit">
+            {t("add")}
+          </Button>
+        </form>
+      </Modal>
+
+      <Modal onClose={() => setRenaming(undefined)} open={renaming !== undefined} title={t("renameTitle")}>
+        <form className="flex flex-col gap-4" onSubmit={(event) => void rename(event)}>
+          <Field label={t("rename")} onChange={(event) => setNewName(event.target.value)} required value={newName} />
+          {renaming ? <p className="text-sm text-slate">{t("productCount", { count: count(renaming) })}</p> : null}
+          {formError ? <Alert>{formError}</Alert> : null}
+          <Button busy={busy === "rename"} className="self-start" disabled={!newName.trim()} type="submit">
+            {t("save")}
+          </Button>
+        </form>
+      </Modal>
+    </Page>
   );
 }

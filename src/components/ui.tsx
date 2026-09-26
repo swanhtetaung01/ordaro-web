@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
   AlertIcon,
   CheckCircleIcon,
   ChevronDownIcon,
+  CloseIcon,
   InfoIcon,
   LogoutIcon,
   SearchIcon,
@@ -430,6 +431,78 @@ export function ConfirmButton({
           {confirmLabel}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * A dialog for details and short forms: a sheet from the bottom on a phone, a centred card on a
+ * wider screen. It is a real modal <dialog> — focus stays inside, Esc and a tap beside it close it.
+ */
+export function Modal({
+  open,
+  onClose,
+  title,
+  wide = false,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: React.ReactNode;
+  wide?: boolean;
+  children: React.ReactNode;
+}) {
+  const t = useTranslations("common");
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (open && dialog && !dialog.open) {
+      dialog.showModal();
+    }
+    if (!open && dialog?.open) {
+      dialog.close();
+    }
+  }, [open]);
+
+  return (
+    <dialog
+      aria-labelledby={titleId}
+      className={`m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-hidden rounded-t-2xl border-0 bg-white p-0 text-ink shadow-xl backdrop:bg-[rgb(15_23_42/0.45)] sm:m-auto sm:max-h-[85dvh] sm:rounded-2xl ${
+        wide ? "sm:max-w-2xl" : "sm:max-w-lg"
+      }`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+      onClose={onClose}
+      ref={ref}
+    >
+      {open ? (
+        <div className="flex max-h-[inherit] flex-col">
+          <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line py-2 pr-2 pl-4 sm:pl-6">
+            <h2 className="min-w-0 text-base font-semibold text-ink" id={titleId}>
+              {title}
+            </h2>
+            <IconButton label={t("close")} onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
+          </div>
+          <div className="overflow-y-auto p-4 pb-8 sm:p-6">{children}</div>
+        </div>
+      ) : null}
+    </dialog>
+  );
+}
+
+/** Label and value on one line, for the figures in a detail view. */
+export function Figure({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-2">
+      <dt className="text-sm text-slate">{label}</dt>
+      <dd className={`text-right tabular-nums ${strong ? "text-base font-semibold text-ink" : "text-sm text-ink"}`}>{value}</dd>
     </div>
   );
 }
