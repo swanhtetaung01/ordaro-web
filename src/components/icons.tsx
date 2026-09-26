@@ -148,6 +148,10 @@ export function UserIcon(props: IconProps) {
   return <Svg {...props}><circle cx="12" cy="8" r="4" /><path d="M4 20a8 8 0 0 1 16 0" /></Svg>;
 }
 
+export function BookIcon(props: IconProps) {
+  return <Svg {...props}><path d="M12 7c-1.7-1.3-4-2-6.5-2-.9 0-1.7.1-2.5.3v13c.8-.2 1.6-.3 2.5-.3 2.5 0 4.8.7 6.5 2 1.7-1.3 4-2 6.5-2 .9 0 1.7.1 2.5.3v-13c-.8-.2-1.6-.3-2.5-.3-2.5 0-4.8.7-6.5 2Zm0 0v13" /></Svg>;
+}
+
 export function CheckIcon(props: IconProps) {
   return <Svg {...props}><path d="m5 12.5 4.5 4.5L19 7" /></Svg>;
 }

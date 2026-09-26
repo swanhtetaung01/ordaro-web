@@ -34,6 +34,7 @@ function afterAuth(kind: string | undefined, router: ReturnType<typeof useRouter
 
 export function LoginForm() {
   const t = useTranslations("login");
+  const guide = useTranslations("guide");
   const errors = useTranslations("errors");
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -73,6 +74,11 @@ export function LoginForm() {
       <p className="text-center text-sm">
         <Link className={linkClasses} href="/signup">
           {t("signup")}
+        </Link>
+      </p>
+      <p className="text-center text-sm">
+        <Link className={linkClasses} href="/guide">
+          {guide("loginLink")}
         </Link>
       </p>
     </form>

@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import {
+  BookIcon,
   BoxIcon,
   CheckIcon,
   ChevronDownIcon,
@@ -328,6 +329,7 @@ function AccountMenu({
 }) {
   const t = useTranslations("shell");
   const language = useTranslations("language");
+  const guide = useTranslations("guide");
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -373,6 +375,17 @@ function AccountMenu({
         >
           <UserIcon className="size-5 shrink-0 text-slate-500" />
           {t("account")}
+        </Link>
+        <Link
+          className={menuItem}
+          href="/guide"
+          onClick={() => {
+            close();
+            onNavigate?.();
+          }}
+        >
+          <BookIcon className="size-5 shrink-0 text-slate-500" />
+          {guide("link")}
         </Link>
         <div className="my-2 border-t border-line" />
         <p className="px-3 pb-1 text-xs font-semibold text-slate-500">{language("label")}</p>
